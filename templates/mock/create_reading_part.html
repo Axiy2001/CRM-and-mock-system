@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Add Reading Part</h2>
+
+<p>
+    <strong>Mock:</strong> {{ mock.title }}
+</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">
+        Save Reading Part
+    </button>
+</form>
+
+<br>
+
+<a href="{% url 'mock_detail' mock.id %}">
+    Back
+</a>
+
+{% endblock %}

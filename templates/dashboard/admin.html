@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Admin Dashboard</h2>
+
+<p>
+    Salom,
+    {{ user.first_name }}
+    {{ user.last_name }}
+    ({{ user.role }})
+</p>
+
+<hr>
+
+<h3>Admin Actions</h3>
+
+<a href="{% url 'create_student' %}">
+    Create Student
+</a>
+
+{% if user.role == 'assistant_admin' %}
+    <br>
+
+    <a href="{% url 'attendance_list' %}">
+        Attendance
+    </a>
+{% endif %}
+
+{% if user.role == 'super_admin' %}
+    <br>
+
+    <a href="{% url 'create_class' %}">
+        Create Class
+    </a>
+
+    <br>
+
+    <a href="{% url 'create_mock_creator' %}">
+        Create Mock Creator
+    </a>
+{% endif %}
+
+<hr>
+
+<h3>Mening classlarim</h3>
+
+{% if managed_classes %}
+
+<table>
+
+    <tr>
+        <th>Class</th>
+        <th>Subject</th>
+        <th>Teacher</th>
+
+        {% if user.role == 'super_admin' %}
+            <th>Assistant Admin</th>
+        {% endif %}
+
+        <th>Actions</th>
+    </tr>
+
+    {% for cls in managed_classes %}
+    <tr>
+
+        <td>{{ cls.name }}</td>
+
+        <td>
+            {% if cls.subject %}
+                {{ cls.subject }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+
+        <td>
+            {% if cls.teacher %}
+                {{ cls.teacher.username }}
+            {% else %}
+                <span style="color:red;">
+                    Teacher biriktirilmagan
+                </span>
+            {% endif %}
+        </td>
+
+        {% if user.role == 'super_admin' %}
+        <td>
+            {% if cls.assistant_admin %}
+                {{ cls.assistant_admin.username }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        {% endif %}
+
+        <td>
+
+            <a href="{% url 'assign_teacher' cls.id %}">
+                Assign Teacher
+            </a>
+
+            |
+
+            <a href="{% url 'manage_students' cls.id %}">
+                Manage Students
+            </a>
+
+            {% if user.role == 'super_admin' %}
+                |
+
+                <a href="{% url 'assign_assistant_admin' cls.id %}">
+                    Assign Admin
+                </a>
+            {% endif %}
+
+        </td>
+
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% else %}
+
+<p>
+    Sizga hali class biriktirilmagan.
+</p>
+
+{% endif %}
+
+<hr>
+
+<h3>Umumiy statistika</h3>
+
+<table>
+
+    <tr>
+        <th>Bo‘lim</th>
+        <th>Soni</th>
+    </tr>
+
+    <tr>
+        <td>Students</td>
+        <td>{{ total_students }}</td>
+    </tr>
+
+    <tr>
+        <td>Teachers</td>
+        <td>{{ total_teachers }}</td>
+    </tr>
+
+    <tr>
+        <td>Classes</td>
+        <td>{{ total_classes }}</td>
+    </tr>
+
+    <tr>
+        <td>Homeworks</td>
+        <td>{{ total_homeworks }}</td>
+    </tr>
+
+    <tr>
+        <td>Attendances</td>
+        <td>{{ total_attendances }}</td>
+    </tr>
+
+</table>
+
+<hr>
+
+<h3>Homework statistikasi</h3>
+
+<ul>
+    <li>Done: {{ done_count }}</li>
+    <li>Not Done: {{ not_done_count }}</li>
+    <li>Partial: {{ partial_count }}</li>
+</ul>
+
+<hr>
+
+<h3>Bugungi o‘zgarishlar</h3>
+
+<ul>
+    <li>
+        Bugun qo‘shilgan studentlar:
+        {{ today_students_added }}
+    </li>
+
+    <li>
+        Bugun ketgan studentlar:
+        {{ today_students_deactivated }}
+    </li>
+
+    <li>
+        Jami aktiv studentlar:
+        {{ active_students }}
+    </li>
+
+    <li>
+        Bugun qo‘shilgan teacherlar:
+        {{ today_teachers_added }}
+    </li>
+
+    <li>
+        Bugun yaratilgan classlar:
+        {{ today_classes_created }}
+    </li>
+</ul>
+
+<hr>
+
+<h3>Oylik / Yillik statistika</h3>
+
+<form method="get">
+
+    <select name="period">
+
+        <option value="month" {% if period == 'month' %}selected{% endif %}>
+            Oylik
+        </option>
+
+        <option value="year" {% if period == 'year' %}selected{% endif %}>
+            Yillik
+        </option>
+
+    </select>
+
+    <button type="submit">
+        Ko‘rsatish
+    </button>
+
+</form>
+
+<ul>
+
+    <li>
+        Qo‘shilgan studentlar:
+        {{ students_added_period }}
+    </li>
+
+    <li>
+        Ketgan studentlar:
+        {{ students_deactivated_period }}
+    </li>
+
+    <li>
+        Jami aktiv studentlar:
+        {{ active_students }}
+    </li>
+
+    <li>
+        Qo‘shilgan teacherlar:
+        {{ teachers_added_period }}
+    </li>
+
+    <li>
+        Yaratilgan classlar:
+        {{ classes_created_period }}
+    </li>
+
+</ul>
+
+<div style="width:520px; height:300px; margin-top:10px;">
+    <canvas id="adminPeriodChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const adminPeriodElement = document.getElementById('adminPeriodChart');
+
+new Chart(adminPeriodElement, {
+    type: 'bar',
+
+    data: {
+        labels: [
+            'Students Added',
+            'Students Left',
+            'Teachers Added',
+            'Classes Created'
+        ],
+
+        datasets: [{
+            data: [
+                {{ students_added_period }},
+                {{ students_deactivated_period }},
+                {{ teachers_added_period }},
+                {{ classes_created_period }}
+            ]
+        }]
+    },
+
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+
+        scales: {
+            y: {
+                beginAtZero: true,
+
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+</script>
+
+{% endblock %}

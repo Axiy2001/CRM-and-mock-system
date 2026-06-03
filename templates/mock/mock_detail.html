@@ -1,0 +1,459 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if builder_type == 'reading' or builder_type == 'listening' %}
+
+<form method="post" class="exam-builder-page" id="examBuilderForm">
+    {% csrf_token %}
+
+    <div class="builder-topbar">
+        <div>
+            <strong>{{ mock.title }}</strong>
+            <span class="muted">{{ builder_title }}</span>
+        </div>
+
+        <a href="{% url 'mock_list' %}">Back</a>
+    </div>
+
+    {% for item in parts_data %}
+        <section
+            class="builder-part {% if forloop.first %}active{% endif %}"
+            id="part-{{ item.part.order }}"
+        >
+            <div class="instruction-box">
+                <strong>Part {{ item.part.order }}</strong>
+                <br>
+                {{ item.part.instruction }}
+            </div>
+
+            <div class="exam-builder-layout">
+                <div class="content-panel">
+                    <textarea
+                        name="content_text_{{ item.part.order }}"
+                        class="content-textarea"
+                        wrap="soft"
+                        placeholder="Part {{ item.part.order }} {{ content_placeholder }}"
+                    >{{ item.content.content }}</textarea>
+                </div>
+
+                <div class="questions-panel">
+                    <h3>Questions {{ item.start }}–{{ item.end }}</h3>
+
+                    {% for row in item.question_rows %}
+                        <div class="question-editor">
+                            <div class="question-number">
+                                {{ row.number }}
+                            </div>
+
+                            <div class="question-fields">
+                                <textarea
+                                    name="question_text_{{ row.number }}"
+                                    rows="2"
+                                    placeholder="Question {{ row.number }} text..."
+                                >{% if row.question %}{{ row.question.question_text }}{% endif %}</textarea>
+
+                                <div class="question-row">
+                                    <select name="question_type_{{ row.number }}">
+                                        <option
+                                            value="text"
+                                            {% if row.question and row.question.question_type == 'text' %}selected{% endif %}
+                                        >
+                                            Text Answer
+                                        </option>
+
+                                        <option
+                                            value="true_false"
+                                            {% if row.question and row.question.question_type == 'true_false' %}selected{% endif %}
+                                        >
+                                            TRUE / FALSE / NOT GIVEN
+                                        </option>
+
+                                        <option
+                                            value="multiple"
+                                            {% if row.question and row.question.question_type == 'multiple' %}selected{% endif %}
+                                        >
+                                            Multiple Choice A/B/C
+                                        </option>
+
+                                        <option
+                                            value="matching"
+                                            {% if row.question and row.question.question_type == 'matching' %}selected{% endif %}
+                                        >
+                                            Matching
+                                        </option>
+
+                                        <option
+                                            value="map_labeling"
+                                            {% if row.question and row.question.question_type == 'map_labeling' %}selected{% endif %}
+                                        >
+                                            Map / Diagram Labeling
+                                        </option>
+
+                                        <option
+                                            value="sentence_completion"
+                                            {% if row.question and row.question.question_type == 'sentence_completion' %}selected{% endif %}
+                                        >
+                                            Sentence Completion
+                                        </option>
+
+                                        <option
+                                            value="note_completion"
+                                            {% if row.question and row.question.question_type == 'note_completion' %}selected{% endif %}
+                                        >
+                                            Note Completion
+                                        </option>
+
+                                        <option
+                                            value="table_completion"
+                                            {% if row.question and row.question.question_type == 'table_completion' %}selected{% endif %}
+                                        >
+                                            Table Completion
+                                        </option>
+                                    </select>
+
+                                    <input
+                                        type="text"
+                                        name="correct_answer_{{ row.number }}"
+                                        placeholder="Correct answer"
+                                        value="{% if row.question %}{{ row.question.correct_answer }}{% endif %}"
+                                    >
+
+                                    <button
+                                        type="button"
+                                        class="clear-question-btn"
+                                        data-question="{{ row.number }}"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endfor %}
+
+    <div class="exam-bottom-nav">
+        <div class="part-buttons">
+            {% for item in parts_data %}
+                <button
+                    type="button"
+                    class="part-tab {% if forloop.first %}active{% endif %}"
+                    data-part="{{ item.part.order }}"
+                >
+                    Part {{ item.part.order }}
+                </button>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="save-builder-btn">
+            Save Answers
+        </button>
+    </div>
+</form>
+
+{% else %}
+
+<h2>{{ mock.title }}</h2>
+<p>Bu mock turi uchun builder keyingi bosqichda qilinadi.</p>
+<a href="{% url 'mock_list' %}">Back</a>
+
+{% endif %}
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    overflow: hidden;
+}
+
+.container {
+    max-width: none;
+    width: 100%;
+    height: calc(100vh - 58px);
+    padding: 0;
+    margin: 0;
+}
+
+.exam-builder-page {
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+}
+
+.builder-topbar {
+    height: 44px;
+    padding: 0 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    flex-shrink: 0;
+}
+
+.muted {
+    color: #6b7280;
+    margin-left: 8px;
+    font-size: 14px;
+}
+
+.builder-part {
+    display: none;
+    flex: 1;
+    min-height: 0;
+}
+
+.builder-part.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.instruction-box {
+    margin: 14px 16px 10px;
+    padding: 14px 16px;
+    background: #f1f1ed;
+    border: 1px solid #e5e5df;
+    border-radius: 5px;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.exam-builder-layout {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    border-top: 1px solid #eeeeee;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.content-panel,
+.questions-panel {
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+}
+
+.content-panel {
+    border-right: 6px solid #eeeeee;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-textarea {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    max-width: 100%;
+    padding: 0 12px 0 0;
+
+    border: none;
+    outline: none;
+    resize: none;
+    background: #ffffff;
+
+    font-size: 16px;
+    line-height: 1.75;
+    font-family: Arial, sans-serif;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.questions-panel h3 {
+    margin: 0 0 14px;
+}
+
+.question-editor {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.question-number {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #cfd4dc;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    font-weight: 600;
+}
+
+.question-fields textarea,
+.question-fields input,
+.question-fields select {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.question-row {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 80px;
+    gap: 8px;
+}
+
+.clear-question-btn {
+    background: #f3f4f6;
+    color: #111827;
+    border: 1px solid #d1d5db;
+}
+
+.exam-bottom-nav {
+    height: 70px;
+    border-top: 1px solid #dcdcdc;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0 14px 12px;
+    flex-shrink: 0;
+}
+
+.part-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.part-tab {
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid #cfd4dc;
+    padding: 8px 13px;
+}
+
+.part-tab.active {
+    border: 2px solid #111827;
+    font-weight: 700;
+}
+
+.save-builder-btn {
+    padding: 10px 18px;
+}
+
+@media (max-width: 900px) {
+    body {
+        overflow: auto;
+    }
+
+    .container {
+        height: auto;
+        min-height: calc(100vh - 58px);
+    }
+
+    .exam-builder-page {
+        height: auto;
+        min-height: calc(100vh - 58px);
+    }
+
+    .exam-builder-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .content-panel {
+        border-right: none;
+        border-bottom: 6px solid #eeeeee;
+    }
+
+    .content-textarea {
+        min-height: 360px;
+    }
+
+    .question-row {
+        grid-template-columns: 1fr;
+    }
+
+    .exam-bottom-nav {
+        height: auto;
+        padding: 10px 14px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const partTabs = document.querySelectorAll('.part-tab');
+    const parts = document.querySelectorAll('.builder-part');
+    const clearButtons = document.querySelectorAll('.clear-question-btn');
+    const builderForm = document.getElementById('examBuilderForm');
+
+    if (builderForm) {
+        builderForm.addEventListener('submit', function (event) {
+            const confirmed = confirm('Save qilishga ishonchingiz komilmi?');
+
+            if (!confirmed) {
+                event.preventDefault();
+            }
+        });
+    }
+
+    partTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            const partNumber = tab.dataset.part;
+
+            partTabs.forEach(function (item) {
+                item.classList.remove('active');
+            });
+
+            tab.classList.add('active');
+
+            parts.forEach(function (part) {
+                part.classList.remove('active');
+            });
+
+            document.getElementById('part-' + partNumber).classList.add('active');
+        });
+    });
+
+    clearButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const questionNumber = button.dataset.question;
+
+            const questionText = document.querySelector(
+                '[name="question_text_' + questionNumber + '"]'
+            );
+
+            const correctAnswer = document.querySelector(
+                '[name="correct_answer_' + questionNumber + '"]'
+            );
+
+            const questionType = document.querySelector(
+                '[name="question_type_' + questionNumber + '"]'
+            );
+
+            if (questionText) {
+                questionText.value = '';
+            }
+
+            if (correctAnswer) {
+                correctAnswer.value = '';
+            }
+
+            if (questionType) {
+                questionType.value = 'text';
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

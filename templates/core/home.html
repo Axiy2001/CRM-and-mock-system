@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if user.role == 'super_admin' or user.role == 'assistant_admin' %}
+
+<div class="dashboard-card">
+    <h1>{{ dashboard_title }}</h1>
+
+    <p class="welcome-text">
+        Salom, {{ user.first_name }} {{ user.last_name }}
+    </p>
+
+    <hr>
+
+    <form method="get" class="filter-form">
+        <div class="filter-grid">
+            <div class="filter-item">
+                <label>Class</label>
+
+                <select name="class_id">
+                    {% for cls in classes %}
+                        <option value="{{ cls.id }}" {% if selected_class_id == cls.id|stringformat:"s" %}selected{% endif %}>
+                            {{ cls.name }} - {{ cls.subject }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label>Period Type</label>
+
+                <select name="period_type" id="periodType">
+                    <option value="month" {% if period_type == 'month' %}selected{% endif %}>Month</option>
+                    <option value="day" {% if period_type == 'day' %}selected{% endif %}>Day</option>
+                </select>
+            </div>
+
+            <div class="filter-item" id="monthField">
+                <label>Month</label>
+                <input type="month" name="month" value="{{ selected_month }}">
+            </div>
+
+            <div class="filter-item" id="dayField">
+                <label>Day</label>
+                <input type="date" name="day" value="{{ selected_day }}">
+            </div>
+        </div>
+
+        <button type="submit" class="load-btn">Load Statistics</button>
+    </form>
+
+    <hr>
+
+    {% if selected_class %}
+        <div class="class-info">
+            <h2>{{ selected_class.name }}</h2>
+            <p>Subject: <strong>{{ selected_class.subject }}</strong></p>
+            <p>
+    Teacher:
+    <strong>
+        {% if selected_class.teacher %}
+            {{ selected_class.teacher.first_name }} {{ selected_class.teacher.last_name }}
+            ({{ selected_class.teacher.username }})
+        {% else %}
+            Biriktirilmagan
+        {% endif %}
+    </strong>
+</p>
+
+<p>
+    Assistant Admin:
+    <strong>
+        {% if selected_class.assistant_admin %}
+            {{ selected_class.assistant_admin.first_name }} {{ selected_class.assistant_admin.last_name }}
+            ({{ selected_class.assistant_admin.username }})
+        {% else %}
+            Biriktirilmagan
+        {% endif %}
+    </strong>
+</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Present</h3>
+                <span>{{ present_count }}</span>
+            </div>
+
+            <div class="stat-card">
+                <h3>Absent</h3>
+                <span>{{ absent_count }}</span>
+            </div>
+
+            <div class="stat-card">
+                <h3>Late</h3>
+                <span>{{ late_count }}</span>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Attendance Pie Chart</h3>
+                <div class="chart-wrapper pie-wrapper">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Attendance Line Chart</h3>
+                <div class="chart-wrapper">
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const periodType = document.getElementById('periodType');
+const monthField = document.getElementById('monthField');
+const dayField = document.getElementById('dayField');
+
+function updateFields() {
+    if (periodType.value === 'day') {
+        monthField.style.display = 'none';
+        dayField.style.display = 'block';
+    } else {
+        monthField.style.display = 'block';
+        dayField.style.display = 'none';
+    }
+}
+
+updateFields();
+periodType.addEventListener('change', updateFields);
+
+new Chart(document.getElementById('pieChart'), {
+    type: 'pie',
+    data: {
+        labels: ['Present', 'Absent', 'Late'],
+        datasets: [{
+            data: [{{ present_count }}, {{ absent_count }}, {{ late_count }}]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+        labels: {{ line_labels|safe }},
+        datasets: [
+            {
+                label: 'Present',
+                data: {{ present_data|safe }}
+            },
+            {
+                label: 'Absent',
+                data: {{ absent_data|safe }}
+            },
+            {
+                label: 'Late',
+                data: {{ late_data|safe }}
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+</script>
+
+<style>
+.dashboard-card {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.welcome-text {
+    margin-top: 10px;
+}
+
+.filter-form {
+    margin-top: 25px;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-item label {
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.filter-item select,
+.filter-item input {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+}
+
+.load-btn {
+    margin-top: 20px;
+}
+
+.class-info {
+    margin-top: 20px;
+}
+
+.stats-grid {
+    margin-top: 25px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.stat-card h3 {
+    margin-bottom: 10px;
+}
+
+.stat-card span {
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.charts-grid {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px;
+    width: 100%;
+}
+
+.chart-card {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 12px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.chart-card h3 {
+    margin-bottom: 15px;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 280px;
+}
+
+.pie-wrapper {
+    height: 260px;
+}
+
+.chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+@media (max-width: 900px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+{% else %}
+
+<h1>Welcome</h1>
+<p>Salom, {{ user.first_name }}</p>
+
+{% endif %}
+
+{% endblock %}

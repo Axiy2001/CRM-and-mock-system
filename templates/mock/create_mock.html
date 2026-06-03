@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Create Mock</h2>
+
+<form method="post">
+
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">
+        Save Mock
+    </button>
+
+</form>
+
+<br>
+
+<a href="{% url 'mock_list' %}">
+    Back
+</a>
+
+{% endblock %}

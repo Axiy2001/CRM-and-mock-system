@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Student Cabinet</h2>
+
+<p>Salom, {{ user.first_name }} {{ user.last_name }}</p>
+
+<h3>Mening classlarim</h3>
+
+{% if student_classes %}
+<table>
+    <tr>
+        <th>Class</th>
+        <th>Subject</th>
+        <th>Teacher</th>
+    </tr>
+
+    {% for item in student_classes %}
+    <tr>
+        <td>{{ item.classroom.name }}</td>
+        <td>{{ item.classroom.subject }}</td>
+        <td>
+            {% if item.classroom.teacher %}
+                {{ item.classroom.teacher.first_name }} {{ item.classroom.teacher.last_name }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Siz hali classga biriktirilmagansiz.</p>
+{% endif %}
+
+<hr>
+
+<h3>Mening attendance</h3>
+
+{% if attendances %}
+<table>
+    <tr>
+        <th>Date</th>
+        <th>Class</th>
+        <th>Status</th>
+    </tr>
+
+    {% for item in attendances %}
+    <tr>
+        <td>{{ item.date }}</td>
+        <td>{{ item.classroom.name }}</td>
+        <td>{{ item.status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Hali attendance mavjud emas.</p>
+{% endif %}
+
+<hr>
+
+<h3>Statistika</h3>
+
+<div class="stats-grid">
+    <div class="card">
+        <h4>Present</h4>
+        <p>{{ present_count }}</p>
+    </div>
+
+    <div class="card">
+        <h4>Absent</h4>
+        <p>{{ absent_count }}</p>
+    </div>
+
+    <div class="card">
+        <h4>Late</h4>
+        <p>{{ late_count }}</p>
+    </div>
+
+    <div class="card">
+        <h4>Done</h4>
+        <p>{{ done_count }}</p>
+    </div>
+
+    <div class="card">
+        <h4>Not Done</h4>
+        <p>{{ not_done_count }}</p>
+    </div>
+
+    <div class="card">
+        <h4>Partial</h4>
+        <p>{{ partial_count }}</p>
+    </div>
+</div>
+
+<hr>
+
+<h3>Attendance Chart</h3>
+
+<div class="chart-box">
+    <canvas id="attendanceChart"></canvas>
+</div>
+
+<hr>
+
+<h3>Homework Chart</h3>
+
+<div class="chart-box">
+    <canvas id="homeworkChart"></canvas>
+</div>
+
+<hr>
+
+<h3>Progress Chart</h3>
+
+<div class="chart-box chart-wide">
+    <canvas id="progressChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const attendanceElement = document.getElementById('attendanceChart');
+
+    new Chart(attendanceElement, {
+        type: 'bar',
+        data: {
+            labels: ['Present', 'Absent', 'Late'],
+            datasets: [
+                {
+                    data: [{{ present_count }}, {{ absent_count }}, {{ late_count }}]
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+
+    const homeworkElement = document.getElementById('homeworkChart');
+
+    new Chart(homeworkElement, {
+        type: 'bar',
+        data: {
+            labels: ['Done', 'Not Done', 'Partial'],
+            datasets: [
+                {
+                    data: [{{ done_count }}, {{ not_done_count }}, {{ partial_count }}],
+                    backgroundColor: ['green', 'red', 'orange']
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+
+    const progressElement = document.getElementById('progressChart');
+
+    new Chart(progressElement, {
+        type: 'line',
+        data: {
+            labels: {{ progress_labels|safe }},
+            datasets: [
+                {
+                    label: 'Score',
+                    data: {{ progress_scores|safe }},
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

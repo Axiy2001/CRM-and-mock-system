@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block content %}
+
+<h2>Payments</h2>
+
+<hr>
+
+<h3>Class Payment Table</h3>
+
+<form method="get" class="payment-filter-form">
+
+    <div class="filter-group">
+        <label>Class</label>
+
+        <select name="class_id">
+            <option value="">-- Class tanlang --</option>
+
+            {% for cls in classes %}
+                <option value="{{ cls.id }}" {% if selected_class_id == cls.id|stringformat:"s" %}selected{% endif %}>
+                    {{ cls.name }} - {{ cls.subject }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label>Month</label>
+
+        <input type="month" name="month" value="{{ selected_month }}">
+    </div>
+
+    <div class="filter-group">
+        <label>Month Lessons</label>
+
+        <input
+            type="number"
+            name="month_lessons"
+            value="{{ month_lessons }}"
+            min="1"
+        >
+    </div>
+
+    <div class="filter-group">
+        <label>Default Amount</label>
+
+        <input
+            type="text"
+            name="default_amount"
+            id="defaultAmountInput"
+            class="money-input"
+            value="{{ default_amount }}"
+            placeholder="350 000"
+        >
+    </div>
+
+    <div class="filter-button">
+        <button type="submit">
+            Load Students
+        </button>
+    </div>
+
+</form>
+
+<hr>
+
+{% if selected_class %}
+
+<h3>{{ selected_class.name }} - {{ selected_class.subject }}</h3>
+
+<div class="payment-summary">
+    <div class="summary-card">
+        <span>Total Students</span>
+        <h3>{{ student_links|length }}</h3>
+    </div>
+
+    <div class="summary-card">
+        <span>Total Amount</span>
+        <h3>{{ total_amount }}</h3>
+    </div>
+
+    <div class="summary-card">
+        <span>Total Paid</span>
+        <h3>{{ total_paid }}</h3>
+    </div>
+
+    <div class="summary-card">
+        <span>Total Debt</span>
+        <h3>{{ total_debt }}</h3>
+    </div>
+</div>
+
+{% if student_links %}
+<form method="post">
+    {% csrf_token %}
+
+    <input type="hidden" name="class_id" value="{{ selected_class.id }}">
+    <input type="hidden" name="month" value="{{ selected_month }}">
+    <input type="hidden" name="month_lessons" value="{{ month_lessons }}">
+    <input type="hidden" name="default_amount" id="hiddenDefaultAmount" value="{{ default_amount }}">
+
+    <table>
+        <tr>
+            <th>Student</th>
+            <th>Month Lessons</th>
+            <th>Student Lessons</th>
+            <th>Total Amount</th>
+            <th>Paid</th>
+            <th>Debt</th>
+            <th>Status</th>
+            <th>Comment</th>
+        </tr>
+
+        {% for item in student_links %}
+            {% with payment=payment_map|get_item:item.student.id %}
+            <tr>
+                <td>
+                    {{ item.student.first_name }}
+                    {{ item.student.last_name }}
+                    ({{ item.student.username }})
+                </td>
+
+                <td>{{ month_lessons }}</td>
+
+                <td>
+                    {% if can_edit %}
+                        <input
+                            type="number"
+                            name="student_lessons_{{ item.student.id }}"
+                            value="{% if payment %}{{ payment.student_lessons }}{% else %}{{ month_lessons }}{% endif %}"
+                            min="0"
+                        >
+                    {% else %}
+                        {% if payment %}
+                            {{ payment.student_lessons }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if can_edit %}
+                        <input
+                            type="text"
+                            class="money-input amount-input"
+                            name="amount_{{ item.student.id }}"
+                            value="{{ default_amount }}"
+                        >
+                    {% else %}
+                        {% if payment %}
+                            {{ payment.amount }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if can_edit %}
+                        <input
+                            type="text"
+                            class="money-input"
+                            name="paid_amount_{{ item.student.id }}"
+                            value="{% if payment %}{{ payment.paid_amount }}{% endif %}"
+                        >
+                    {% else %}
+                        {% if payment %}
+                            {{ payment.paid_amount }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if payment %}
+                        {{ payment.debt }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if payment %}
+                        {% if payment.status == 'paid' %}
+                            <span class="status-paid">Paid</span>
+                        {% elif payment.status == 'partial' %}
+                            <span class="status-partial">Partial</span>
+                        {% else %}
+                            <span class="status-unpaid">Unpaid</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="status-unpaid">Unpaid</span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if can_edit %}
+                        <input
+                            type="text"
+                            name="comment_{{ item.student.id }}"
+                            value="{% if payment and payment.comment %}{{ payment.comment }}{% endif %}"
+                        >
+                    {% else %}
+                        {% if payment and payment.comment %}
+                            {{ payment.comment }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endwith %}
+        {% endfor %}
+    </table>
+
+    {% if can_edit %}
+        <br>
+        <button type="submit">Save Payments</button>
+    {% endif %}
+</form>
+{% else %}
+<p>Bu classda active student yo‘q.</p>
+{% endif %}
+
+{% else %}
+<p>Class, oy, darslar soni va default summani tanlang.</p>
+{% endif %}
+
+<style>
+.payment-filter-form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) auto;
+    gap: 16px;
+    align-items: end;
+    margin-bottom: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+}
+
+.filter-button {
+    display: flex;
+    align-items: end;
+}
+
+.filter-button button {
+    height: 40px;
+    padding: 0 20px;
+}
+
+@media (max-width: 900px) {
+    .payment-filter-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+.status-paid {
+    color: green;
+    font-weight: bold;
+}
+
+.status-partial {
+    color: orange;
+    font-weight: bold;
+}
+
+.status-unpaid {
+    color: red;
+    font-weight: bold;
+}
+
+.payment-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.summary-card {
+    background: #f5f7fb;
+    padding: 18px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.summary-card span {
+    display: block;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.summary-card h3 {
+    margin: 0;
+    font-size: 24px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const defaultAmountInput = document.getElementById('defaultAmountInput');
+    const hiddenDefaultAmount = document.getElementById('hiddenDefaultAmount');
+    const amountInputs = document.querySelectorAll('.amount-input');
+    const moneyInputs = document.querySelectorAll('.money-input');
+
+    function formatMoney(value) {
+        value = value.replace(/\s/g, '');
+        value = value.replace(/\D/g, '');
+        return value.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+
+    moneyInputs.forEach(function (input) {
+        input.addEventListener('input', function () {
+            input.value = formatMoney(input.value);
+        });
+    });
+
+    if (defaultAmountInput) {
+        defaultAmountInput.addEventListener('input', function () {
+            const formattedValue = formatMoney(defaultAmountInput.value);
+
+            defaultAmountInput.value = formattedValue;
+
+            if (hiddenDefaultAmount) {
+                hiddenDefaultAmount.value = formattedValue;
+            }
+
+            amountInputs.forEach(function (input) {
+                input.value = formattedValue;
+            });
+        });
+    }
+});
+</script>
+
+{% endblock %}

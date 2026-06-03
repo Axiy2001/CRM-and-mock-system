@@ -1,0 +1,65 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Education Center</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<header class="site-header">
+
+    <div class="logo">
+        Education Center
+    </div>
+
+    <nav class="nav-menu">
+
+        <a href="{% url 'home' %}">Home</a>
+
+        {% if user.is_authenticated %}
+
+            {% if user.role == 'student' or user.role == 'mock_creator' %}
+                <a href="{% url 'mock_list' %}">Mock</a>
+            {% endif %}
+
+            {% if user.role == 'student' or user.role == 'teacher' %}
+                <a href="{% url 'cabinet' %}">Cabinet</a>
+                <a href="{% url 'homework_list' %}">Homeworks</a>
+            {% endif %}
+
+            {% if user.role == 'teacher' %}
+                <a href="{% url 'attendance_list' %}">Attendance</a>
+            {% endif %}
+
+            {% if user.role == 'assistant_admin' or user.role == 'super_admin' %}
+                <a href="{% url 'cabinet' %}">Admin</a>
+                <a href="{% url 'payment_list' %}">Payments</a>
+            {% endif %}
+
+            <a href="{% url 'logout' %}" class="logout-link">
+                Logout
+            </a>
+
+        {% else %}
+
+            <a href="{% url 'login' %}">
+                Login
+            </a>
+
+        {% endif %}
+
+    </nav>
+
+</header>
+
+<main class="container">
+    {% block content %}
+    {% endblock %}
+</main>
+
+</body>
+</html>

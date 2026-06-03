@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Homework Detail</h2>
+
+<p><b>Title:</b> {{ homework.title }}</p>
+<p><b>Class:</b> {{ homework.classroom.name }}</p>
+<p><b>Description:</b> {{ homework.description }}</p>
+<p><b>Due date:</b> {{ homework.due_date }}</p>
+<p><b>Created by:</b> {{ homework.created_by.username }}</p>
+
+<hr>
+
+<h3>Student Results</h3>
+
+{% if statuses %}
+<table>
+    <tr>
+        <th>Student</th>
+        <th>Status</th>
+        <th>Score</th>
+        <th>Comment</th>
+        <th>Checked By</th>
+        <th>Checked At</th>
+    </tr>
+
+    {% for item in statuses %}
+    <tr>
+        <td>{{ item.student.first_name }} {{ item.student.last_name }} ({{ item.student.username }})</td>
+        <td>{{ item.status }}</td>
+        <td>
+            {% if item.score %}
+                {{ item.score }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td>
+            {% if item.comment %}
+                {{ item.comment }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td>
+            {% if item.checked_by %}
+                {{ item.checked_by.username }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td>{{ item.checked_at }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Bu homework hali tekshirilmagan.</p>
+{% endif %}
+
+<br>
+
+<a href="{% url 'homework_list' %}">Back to Homework List</a>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Attendance</h2>
+
+<hr>
+
+<h3>Attendance List</h3>
+
+<form method="get">
+    {% if take_class_id %}
+        <input type="hidden" name="take_class_id" value="{{ take_class_id }}">
+    {% endif %}
+
+    <label>Select Class:</label>
+
+    <select name="class_id">
+        <option value="">-- Class tanlang --</option>
+
+        {% for cls in classes %}
+            <option value="{{ cls.id }}" {% if selected_class_id == cls.id|stringformat:"s" %}selected{% endif %}>
+                {{ cls.name }} - {{ cls.subject }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Load List</button>
+</form>
+
+{% if selected_class %}
+    <h3>{{ selected_class.name }}</h3>
+
+    {% if student_data %}
+        <table>
+            <tr>
+                <th>Student</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Late</th>
+                <th>Last Date</th>
+                <th>Last Status</th>
+                <th>Late Time</th>
+            </tr>
+
+            {% for item in student_data %}
+            <tr>
+                <td>
+                    {{ item.student.first_name }}
+                    {{ item.student.last_name }}
+                    ({{ item.student.username }})
+                </td>
+                <td>{{ item.present_count }}</td>
+                <td>{{ item.absent_count }}</td>
+                <td>{{ item.late_count }}</td>
+
+                {% if item.last_attendance %}
+                    <td>{{ item.last_attendance.date }}</td>
+                    <td>{{ item.last_attendance.status }}</td>
+                    <td>
+                        {% if item.last_attendance.late_time %}
+                            {{ item.last_attendance.late_time }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                {% else %}
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>Bu classda student topilmadi.</p>
+    {% endif %}
+{% else %}
+    <p>Attendance list uchun class tanlang.</p>
+{% endif %}
+
+<hr>
+
+<h3>Take Attendance</h3>
+
+<form method="get">
+    {% if selected_class_id %}
+        <input type="hidden" name="class_id" value="{{ selected_class_id }}">
+    {% endif %}
+
+    <label>Select Class:</label>
+
+    <select name="take_class_id">
+        <option value="">-- Class tanlang --</option>
+
+        {% for cls in classes %}
+            <option value="{{ cls.id }}" {% if take_class_id == cls.id|stringformat:"s" %}selected{% endif %}>
+                {{ cls.name }} - {{ cls.subject }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Load Students</button>
+</form>
+
+{% if take_class %}
+    <h3>{{ take_class.name }}</h3>
+
+    {% if take_students %}
+        <form method="post">
+            {% csrf_token %}
+
+            <input type="hidden" name="take_class_id" value="{{ take_class.id }}">
+
+            <table>
+                <tr>
+                    <th>Student</th>
+                    <th>Status</th>
+                    <th>Late Time</th>
+                </tr>
+
+                {% for item in take_students %}
+                <tr>
+                    <td>
+                        {{ item.student.first_name }}
+                        {{ item.student.last_name }}
+                        ({{ item.student.username }})
+                    </td>
+
+                    <td>
+                        <select name="status_{{ item.student.id }}">
+                            <option value="present">Present</option>
+                            <option value="absent">Absent</option>
+                            <option value="late">Late</option>
+                        </select>
+                    </td>
+
+                    <td>
+                        <input type="time" name="late_time_{{ item.student.id }}">
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <br>
+
+            <button type="submit">Save Attendance</button>
+        </form>
+    {% else %}
+        <p>Bu classda student topilmadi.</p>
+    {% endif %}
+{% else %}
+    <p>Attendance olish uchun class tanlang.</p>
+{% endif %}
+
+{% endblock %}

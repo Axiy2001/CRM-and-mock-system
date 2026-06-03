@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Classes</h2>
+
+<table border="1" cellpadding="10">
+    <tr>
+        <th>Name</th>
+        <th>Subject</th>
+        <th>Teacher</th>
+    </tr>
+
+    {% for cls in classes %}
+    <tr>
+        <td>{{ cls.name }}</td>
+        <td>{{ cls.subject }}</td>
+        <td>{{ cls.teacher }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

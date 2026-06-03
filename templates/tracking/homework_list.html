@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load custom_tags %}
+
+{% block content %}
+
+<h2>Homeworks</h2>
+
+<hr>
+
+<h3>Homework List</h3>
+
+{% if homeworks %}
+<table>
+    <tr>
+        <th>Title</th>
+        <th>Class</th>
+        <th>Description</th>
+        <th>Due Date</th>
+        <th>Created By</th>
+
+        {% if user.role == 'student' %}
+            <th>Status</th>
+            <th>Score</th>
+            <th>Comment</th>
+        {% endif %}
+
+        {% if user.role == 'teacher' %}
+            <th>Actions</th>
+        {% endif %}
+    </tr>
+
+    {% for item in homeworks %}
+    <tr>
+        <td>{{ item.title }}</td>
+        <td>{{ item.classroom.name }}</td>
+        <td>{% if item.description %}{{ item.description }}{% else %}-{% endif %}</td>
+        <td>{{ item.due_date }}</td>
+        <td>{% if item.created_by %}{{ item.created_by.username }}{% else %}-{% endif %}</td>
+
+        {% if user.role == 'student' %}
+            {% with hs=status_map|get_item:item.id %}
+                <td>{% if hs %}{{ hs.status }}{% else %}-{% endif %}</td>
+                <td>{% if hs and hs.score %}{{ hs.score }}{% else %}-{% endif %}</td>
+                <td>{% if hs and hs.comment %}{{ hs.comment }}{% else %}-{% endif %}</td>
+            {% endwith %}
+        {% endif %}
+
+        {% if user.role == 'teacher' %}
+            <td>
+                <a href="{% url 'homework_detail' item.id %}">View</a>
+            </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Homework topilmadi.</p>
+{% endif %}
+
+{% if user.role == 'teacher' %}
+
+<hr>
+
+<h3>Create Homework</h3>
+
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="create_homework">
+
+    {{ create_form.as_p }}
+
+    <button type="submit">Create Homework</button>
+</form>
+
+<hr>
+
+<h3>Check Homework</h3>
+
+<form method="get">
+    <label>Select Homework:</label>
+
+    <select name="homework_id">
+        <option value="">-- Homework tanlang --</option>
+
+        {% for hw in homeworks %}
+            <option value="{{ hw.id }}" {% if selected_homework and selected_homework.id == hw.id %}selected{% endif %}>
+                {{ hw.title }} - {{ hw.classroom.name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Load Students</button>
+</form>
+
+{% if selected_homework %}
+    <h3>{{ selected_homework.title }}</h3>
+    <p><strong>Class:</strong> {{ selected_homework.classroom.name }}</p>
+    <p><strong>Due date:</strong> {{ selected_homework.due_date }}</p>
+
+    {% if student_links %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="check_homework">
+        <input type="hidden" name="homework_id" value="{{ selected_homework.id }}">
+
+        <table>
+            <tr>
+                <th>Student</th>
+                <th>Status</th>
+                <th>Score</th>
+                <th>Comment</th>
+            </tr>
+
+            {% for item in student_links %}
+            <tr>
+                <td>
+                    {{ item.student.first_name }}
+                    {{ item.student.last_name }}
+                    ({{ item.student.username }})
+                </td>
+
+                <td>
+                    <select name="status_{{ item.student.id }}">
+                        <option value="done">Done</option>
+                        <option value="not_done">Not Done</option>
+                        <option value="partial">Partial</option>
+                    </select>
+                </td>
+
+                <td>
+                    <input type="number" name="score_{{ item.student.id }}" min="0" max="100">
+                </td>
+
+                <td>
+                    <input type="text" name="comment_{{ item.student.id }}" placeholder="Comment">
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <br>
+
+        <button type="submit">Save Homework Check</button>
+    </form>
+    {% else %}
+    <p>Bu homework classida active student yo‘q.</p>
+    {% endif %}
+{% else %}
+<p>Homework tekshirish uchun homework tanlang.</p>
+{% endif %}
+
+{% endif %}
+
+{% endblock %}

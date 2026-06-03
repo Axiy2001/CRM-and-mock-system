@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Create Student</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.username.label_tag }}
+    {{ form.username }}
+    <br><br>
+
+    {{ form.first_name.label_tag }}
+    {{ form.first_name }}
+    <br><br>
+
+    {{ form.last_name.label_tag }}
+    {{ form.last_name }}
+    <br><br>
+
+    {{ form.password.label_tag }}
+    {{ form.password }}
+    <br>
+
+    <label>
+        <input type="checkbox" onclick="togglePassword()">
+        Show password
+    </label>
+
+    <br><br>
+
+    <button type="submit">Create Student</button>
+</form>
+
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById("id_password");
+
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+        } else {
+            passwordInput.type = "password";
+        }
+    }
+</script>
+
+{% endblock %}

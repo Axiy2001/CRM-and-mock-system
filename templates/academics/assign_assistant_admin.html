@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Assign Assistant Admin</h2>
+
+<p>
+    <strong>Class:</strong> {{ classroom.name }}
+</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">Save</button>
+</form>
+
+<br>
+
+<a href="{% url 'cabinet' %}">Back to Admin Dashboard</a>
+{% endblock %}

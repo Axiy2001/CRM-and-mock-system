@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Manage Students</h2>
+
+<p>
+    <strong>Class:</strong> {{ classroom.name }}
+</p>
+
+<hr>
+
+<h3>Add Student</h3>
+
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add">
+
+    {{ form.as_p }}
+
+    <button type="submit">Add Student</button>
+</form>
+
+<hr>
+
+<h3>Active Students</h3>
+
+{% if active_students %}
+<table>
+    <tr>
+        <th>Student</th>
+        <th>Joined At</th>
+        <th>Action</th>
+    </tr>
+
+    {% for item in active_students %}
+    <tr>
+        <td>
+            <a href="{% url 'student_profile' item.student.id %}">
+                {{ item.student.first_name }}
+                {{ item.student.last_name }}
+                ({{ item.student.username }})
+            </a>
+        </td>
+
+        <td>{{ item.joined_at|date:"Y-m-d H:i" }}</td>
+
+        <td>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="remove">
+                <input type="hidden" name="student_class_id" value="{{ item.id }}">
+
+                <button type="submit">Remove</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Bu classda active student yo‘q.</p>
+{% endif %}
+
+<hr>
+
+<h3>Archived Students</h3>
+
+{% if archived_students %}
+<table>
+    <tr>
+        <th>Student</th>
+        <th>Joined At</th>
+        <th>Left At</th>
+        <th>Removed By</th>
+    </tr>
+
+    {% for item in archived_students %}
+    <tr>
+        <td>
+            <a href="{% url 'student_profile' item.student.id %}">
+                {{ item.student.first_name }}
+                {{ item.student.last_name }}
+                ({{ item.student.username }})
+            </a>
+        </td>
+
+        <td>{{ item.joined_at|date:"Y-m-d H:i" }}</td>
+
+        <td>
+            {% if item.left_at %}
+                {{ item.left_at|date:"Y-m-d H:i" }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+
+        <td>
+            {% if item.removed_by %}
+                {{ item.removed_by.username }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Arxivda student yo‘q.</p>
+{% endif %}
+
+<br>
+
+<a href="{% url 'cabinet' %}">Back to Cabinet</a>
+
+{% endblock %}

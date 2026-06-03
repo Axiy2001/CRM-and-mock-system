@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Check Homework</h2>
+
+<form method="get">
+    <label>Select Homework:</label>
+    <select name="homework_id">
+        <option value="">-- tanla --</option>
+        {% for hw in homeworks %}
+            <option value="{{ hw.id }}" {% if selected_homework and hw.id == selected_homework.id %}selected{% endif %}>
+                {{ hw.title }} - {{ hw.classroom.name }}
+            </option>
+        {% endfor %}
+    </select>
+    <button type="submit">Load Students</button>
+</form>
+
+<hr>
+
+{% if selected_homework %}
+    <h3>{{ selected_homework.title }}</h3>
+    <p>Class: {{ selected_homework.classroom.name }}</p>
+    <p>Due date: {{ selected_homework.due_date }}</p>
+{% endif %}
+
+{% if student_links %}
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="homework_id" value="{{ selected_homework.id }}">
+
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>Student</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Comment</th>
+        </tr>
+
+        {% for item in student_links %}
+        <tr>
+            <td>{{ item.student.first_name }} {{ item.student.last_name }}</td>
+            <td>
+                <select name="status_{{ item.student.id }}">
+                    <option value="done">Done</option>
+                    <option value="not_done">Not Done</option>
+                    <option value="partial">Partial</option>
+                </select>
+            </td>
+            <td>
+                <input type="number" name="score_{{ item.student.id }}" min="0" max="100" placeholder="0-100">
+            </td>
+            <td>
+                <input type="text" name="comment_{{ item.student.id }}" placeholder="Comment yozing">
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+    <button type="submit">Save Homework Check</button>
+</form>
+{% endif %}
+
+{% endblock %}
