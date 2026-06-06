@@ -2,15 +2,25 @@ from django.db import models
 from django.conf import settings
 
 
-QUESTION_TYPE_CHOICES = (
+READING_QUESTION_TYPE_CHOICES = (
     ('text', 'Text Answer'),
-    ('multiple', 'Multiple Choice A/B/C'),
     ('true_false', 'TRUE / FALSE / NOT GIVEN'),
     ('matching', 'Matching'),
-    ('map_labeling', 'Map / Diagram Labeling'),
     ('sentence_completion', 'Sentence Completion'),
     ('note_completion', 'Note Completion'),
     ('table_completion', 'Table Completion'),
+)
+
+
+LISTENING_QUESTION_TYPE_CHOICES = (
+    ('text', 'Text / Completion'),
+    ('inline_completion', 'Inline Completion'),
+    ('single_choice', 'Single Choice'),
+    ('multiple_choice', 'Multiple Choice'),
+    ('dropdown', 'Matching / Dropdown'),
+    ('map_dropdown', 'Map / Diagram Dropdown'),
+    ('table_completion', 'Table Completion'),
+    ('table_dropdown', 'Table Dropdown Matching'),
 )
 
 
@@ -88,7 +98,7 @@ class Question(models.Model):
 
     question_type = models.CharField(
         max_length=30,
-        choices=QUESTION_TYPE_CHOICES,
+        choices=READING_QUESTION_TYPE_CHOICES,
         default='text'
     )
 
@@ -129,6 +139,12 @@ class ListeningPart(models.Model):
         null=True
     )
 
+    image = models.ImageField(
+        upload_to='listening_images/',
+        blank=True,
+        null=True
+    )
+
     content = models.TextField(blank=True)
     order = models.PositiveIntegerField(default=1)
 
@@ -147,16 +163,63 @@ class ListeningQuestion(models.Model):
 
     question_type = models.CharField(
         max_length=30,
-        choices=QUESTION_TYPE_CHOICES,
+        choices=LISTENING_QUESTION_TYPE_CHOICES,
         default='text'
     )
 
-    correct_answer = models.CharField(max_length=255)
+    correct_answer = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=1)
 
     def __str__(self):
         return f"{self.part.mock.title} - Listening Question {self.order}"
 
+
+class ListeningQuestionChoice(models.Model):
+    question = models.ForeignKey(
+        ListeningQuestion,
+        on_delete=models.CASCADE,
+        related_name='choices'
+    )
+
+    text = models.CharField(max_length=255)
+    is_correct = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return self.text
+
+class WritingTask(models.Model):
+    TASK_TYPE_CHOICES = (
+        ('task1', 'Task 1'),
+        ('task2', 'Task 2'),
+    )
+
+    mock = models.ForeignKey(
+        MockTest,
+        on_delete=models.CASCADE,
+        related_name='writing_tasks'
+    )
+
+    task_type = models.CharField(
+        max_length=20,
+        choices=TASK_TYPE_CHOICES,
+        default='task1'
+    )
+
+    title = models.CharField(max_length=255)
+    instruction = models.TextField(blank=True)
+
+    image = models.ImageField(
+        upload_to='writing_images/',
+        blank=True,
+        null=True
+    )
+
+    minimum_words = models.PositiveIntegerField(default=150)
+    order = models.PositiveIntegerField(default=1)
+
+    def __str__(self):
+        return f"{self.mock.title} - Writing {self.title}"
 
 class MockAccess(models.Model):
     student = models.ForeignKey(
@@ -208,3 +271,71 @@ class MockResult(models.Model):
 
     def __str__(self):
         return f"{self.student.username} - {self.mock.title} - {self.score}"
+
+class StudentAnswer(models.Model):
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='student_answers'
+    )
+
+    mock = models.ForeignKey(
+        MockTest,
+        on_delete=models.CASCADE,
+        related_name='student_answers'
+    )
+
+    question_number = models.PositiveIntegerField()
+    answer = models.TextField(blank=True)
+    is_correct = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('student', 'mock', 'question_number')
+
+    def __str__(self):
+        return f"{self.student.username} - {self.mock.title} - {self.question_number}"
+
+class WritingSubmission(models.Model):
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='writing_submissions'
+    )
+
+    mock = models.ForeignKey(
+        MockTest,
+        on_delete=models.CASCADE,
+        related_name='writing_submissions'
+    )
+
+    task1_answer = models.TextField(blank=True)
+    task2_answer = models.TextField(blank=True)
+
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    task1_score = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        null=True,
+        blank=True
+    )
+
+    task2_score = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        null=True,
+        blank=True
+    )
+
+    overall_band = models.DecimalField(
+        max_digits=3,
+        decimal_places=1,
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.student.username} - {self.mock.title} Writing"

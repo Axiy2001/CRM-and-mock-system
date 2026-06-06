@@ -4,7 +4,12 @@
 
 {% if builder_type == 'reading' or builder_type == 'listening' %}
 
-<form method="post" class="exam-builder-page" id="examBuilderForm">
+<form
+    method="post"
+    enctype="multipart/form-data"
+    class="exam-builder-page"
+    id="examBuilderForm"
+>
     {% csrf_token %}
 
     <div class="builder-topbar">
@@ -29,6 +34,50 @@
 
             <div class="exam-builder-layout">
                 <div class="content-panel">
+
+                    {% if builder_type == 'listening' %}
+                        <div class="part-media-box">
+                            <label>Part audio</label>
+
+                            {% if item.part.audio_file %}
+                                <audio controls controlsList="nodownload" class="audio-preview">
+                                    <source src="{{ item.part.audio_file.url }}">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            {% endif %}
+
+                            <input
+                                type="file"
+                                name="part_audio_{{ item.part.order }}"
+                                accept="audio/*"
+                            >
+                        </div>
+
+                        <div class="part-media-box">
+                            <label>Part image / map / diagram</label>
+
+                            {% if item.part.image %}
+                                <div class="current-image">
+                                    <img src="{{ item.part.image.url }}" alt="Part image">
+                                </div>
+                            {% endif %}
+
+                            <input
+                                type="file"
+                                name="part_image_{{ item.part.order }}"
+                                accept="image/*"
+                            >
+                        </div>
+
+                        <div class="builder-help-box">
+                            <strong>Inline Completion:</strong>
+                            matn ichida savol raqamini <code>[31]</code> ko‘rinishida yozing.
+                            <br>
+                            <strong>Table Dropdown:</strong>
+                            content qismiga A-H variantlarni yozing, savollarga esa section nomlarini yozing.
+                        </div>
+                    {% endif %}
+
                     <textarea
                         name="content_text_{{ item.part.order }}"
                         class="content-textarea"
@@ -54,62 +103,29 @@
                                 >{% if row.question %}{{ row.question.question_text }}{% endif %}</textarea>
 
                                 <div class="question-row">
-                                    <select name="question_type_{{ row.number }}">
-                                        <option
-                                            value="text"
-                                            {% if row.question and row.question.question_type == 'text' %}selected{% endif %}
-                                        >
-                                            Text Answer
-                                        </option>
+                                    <select
+                                        name="question_type_{{ row.number }}"
+                                        class="question-type-select"
+                                    >
+                                        {% if builder_type == 'reading' %}
+                                            <option value="text" {% if row.question and row.question.question_type == 'text' %}selected{% endif %}>Text Answer</option>
+                                            <option value="true_false" {% if row.question and row.question.question_type == 'true_false' %}selected{% endif %}>TRUE / FALSE / NOT GIVEN</option>
+                                            <option value="matching" {% if row.question and row.question.question_type == 'matching' %}selected{% endif %}>Matching</option>
+                                            <option value="sentence_completion" {% if row.question and row.question.question_type == 'sentence_completion' %}selected{% endif %}>Sentence Completion</option>
+                                            <option value="note_completion" {% if row.question and row.question.question_type == 'note_completion' %}selected{% endif %}>Note Completion</option>
+                                            <option value="table_completion" {% if row.question and row.question.question_type == 'table_completion' %}selected{% endif %}>Table Completion</option>
+                                        {% endif %}
 
-                                        <option
-                                            value="true_false"
-                                            {% if row.question and row.question.question_type == 'true_false' %}selected{% endif %}
-                                        >
-                                            TRUE / FALSE / NOT GIVEN
-                                        </option>
-
-                                        <option
-                                            value="multiple"
-                                            {% if row.question and row.question.question_type == 'multiple' %}selected{% endif %}
-                                        >
-                                            Multiple Choice A/B/C
-                                        </option>
-
-                                        <option
-                                            value="matching"
-                                            {% if row.question and row.question.question_type == 'matching' %}selected{% endif %}
-                                        >
-                                            Matching
-                                        </option>
-
-                                        <option
-                                            value="map_labeling"
-                                            {% if row.question and row.question.question_type == 'map_labeling' %}selected{% endif %}
-                                        >
-                                            Map / Diagram Labeling
-                                        </option>
-
-                                        <option
-                                            value="sentence_completion"
-                                            {% if row.question and row.question.question_type == 'sentence_completion' %}selected{% endif %}
-                                        >
-                                            Sentence Completion
-                                        </option>
-
-                                        <option
-                                            value="note_completion"
-                                            {% if row.question and row.question.question_type == 'note_completion' %}selected{% endif %}
-                                        >
-                                            Note Completion
-                                        </option>
-
-                                        <option
-                                            value="table_completion"
-                                            {% if row.question and row.question.question_type == 'table_completion' %}selected{% endif %}
-                                        >
-                                            Table Completion
-                                        </option>
+                                        {% if builder_type == 'listening' %}
+                                            <option value="text" {% if row.question and row.question.question_type == 'text' %}selected{% endif %}>Text / Completion — input text</option>
+                                            <option value="inline_completion" {% if row.question and row.question.question_type == 'inline_completion' %}selected{% endif %}>Inline Completion — text inside paragraph</option>
+                                            <option value="single_choice" {% if row.question and row.question.question_type == 'single_choice' %}selected{% endif %}>Single Choice — radio</option>
+                                            <option value="multiple_choice" {% if row.question and row.question.question_type == 'multiple_choice' %}selected{% endif %}>Multiple Choice — checkbox</option>
+                                            <option value="dropdown" {% if row.question and row.question.question_type == 'dropdown' %}selected{% endif %}>Matching / Dropdown — select</option>
+                                            <option value="map_dropdown" {% if row.question and row.question.question_type == 'map_dropdown' %}selected{% endif %}>Map / Diagram Dropdown — select</option>
+                                            <option value="table_completion" {% if row.question and row.question.question_type == 'table_completion' %}selected{% endif %}>Table Completion — table input</option>
+                                            <option value="table_dropdown" {% if row.question and row.question.question_type == 'table_dropdown' %}selected{% endif %}>Table Dropdown Matching — table + select</option>
+                                        {% endif %}
                                     </select>
 
                                     <input
@@ -119,14 +135,47 @@
                                         value="{% if row.question %}{{ row.question.correct_answer }}{% endif %}"
                                     >
 
-                                    <button
-                                        type="button"
-                                        class="clear-question-btn"
-                                        data-question="{{ row.number }}"
-                                    >
+                                    <button type="button" class="clear-question-btn" data-question="{{ row.number }}">
                                         Clear
                                     </button>
                                 </div>
+
+                                {% if builder_type == 'listening' %}
+                                    <div class="type-info-box">
+                                        <strong>Input type:</strong>
+                                        <span class="type-info-text">
+                                            Text / Completion = input text
+                                        </span>
+                                    </div>
+
+                                    <div class="choice-box">
+                                        <p class="choice-help">
+                                            Radio, checkbox, dropdown, map dropdown yoki table dropdown uchun variantlar.
+                                            Masalan: A, B, C, D, E, F, G, H.
+                                        </p>
+
+                                        {% for option in row.option_rows %}
+                                            <div class="choice-row">
+                                                <input
+                                                    type="text"
+                                                    name="option_{{ row.number }}_{{ option.order }}"
+                                                    placeholder="Option {{ option.order }}"
+                                                    value="{% if option.choice %}{{ option.choice.text }}{% endif %}"
+                                                >
+
+                                                <label>
+                                                    <input
+                                                        type="checkbox"
+                                                        name="correct_option_{{ row.number }}"
+                                                        value="{{ option.order }}"
+                                                        {% if option.choice and option.choice.is_correct %}checked{% endif %}
+                                                    >
+                                                    Correct
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     {% endfor %}
@@ -138,11 +187,7 @@
     <div class="exam-bottom-nav">
         <div class="part-buttons">
             {% for item in parts_data %}
-                <button
-                    type="button"
-                    class="part-tab {% if forloop.first %}active{% endif %}"
-                    data-part="{{ item.part.order }}"
-                >
+                <button type="button" class="part-tab {% if forloop.first %}active{% endif %}" data-part="{{ item.part.order }}">
                     Part {{ item.part.order }}
                 </button>
             {% endfor %}
@@ -150,6 +195,81 @@
 
         <button type="submit" class="save-builder-btn">
             Save Answers
+        </button>
+    </div>
+</form>
+
+{% elif builder_type == 'writing' %}
+
+<form
+    method="post"
+    enctype="multipart/form-data"
+    class="writing-builder-page"
+>
+    {% csrf_token %}
+
+    <div class="writing-topbar">
+        <div>
+            <strong>{{ mock.title }}</strong>
+            <span>{{ builder_title }}</span>
+        </div>
+
+        <a href="{% url 'mock_list' %}">Back</a>
+    </div>
+
+    <div class="writing-builder-wrapper">
+        {% for task in writing_tasks %}
+            <div class="writing-task-card">
+                <div class="writing-task-header">
+                    <h3>{{ task.title }}</h3>
+                    <span>{{ task.task_type }}</span>
+                </div>
+
+                <label>Task title</label>
+                <input
+                    type="text"
+                    name="writing_title_{{ task.order }}"
+                    value="{{ task.title }}"
+                    class="writing-input"
+                >
+
+                <label>Instruction / Question</label>
+                <textarea
+                    name="writing_instruction_{{ task.order }}"
+                    rows="9"
+                    class="writing-textarea"
+                    placeholder="Writing task instruction..."
+                >{{ task.instruction }}</textarea>
+
+                <label>Minimum words</label>
+                <input
+                    type="number"
+                    name="writing_minimum_words_{{ task.order }}"
+                    value="{{ task.minimum_words }}"
+                    class="writing-input"
+                >
+
+                <label>Image / Chart / Diagram</label>
+
+                {% if task.image %}
+                    <div class="writing-image-preview">
+                        <img src="{{ task.image.url }}" alt="Writing task image">
+                    </div>
+                {% endif %}
+
+                <input
+                    type="file"
+                    name="writing_image_{{ task.order }}"
+                    accept="image/*"
+                    class="writing-input"
+                >
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="writing-bottom-bar">
+        <button type="submit" class="save-builder-btn">
+            Save Writing Tasks
         </button>
     </div>
 </form>
@@ -168,7 +288,8 @@
 }
 
 body {
-    overflow: hidden;
+    overflow: auto;
+	 height: 100vh;
 }
 
 .container {
@@ -249,25 +370,65 @@ body {
     flex-direction: column;
 }
 
+.part-media-box {
+    margin-bottom: 14px;
+    padding: 12px;
+    border: 1px dashed #cfd4dc;
+    border-radius: 8px;
+    background: #f9fafb;
+}
+
+.part-media-box label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.audio-preview {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.current-image img {
+    max-width: 100%;
+    max-height: 240px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.builder-help-box {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    color: #92400e;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.builder-help-box code {
+    background: #ffffff;
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: #111827;
+}
+
 .content-textarea {
     width: 100%;
     height: 100%;
     min-height: 100%;
     max-width: 100%;
     padding: 0 12px 0 0;
-
     border: none;
     outline: none;
     resize: none;
     background: #ffffff;
-
     font-size: 16px;
     line-height: 1.75;
     font-family: Arial, sans-serif;
-
     overflow-x: hidden;
     overflow-y: auto;
-
     white-space: pre-wrap;
     word-break: break-word;
     overflow-wrap: break-word;
@@ -305,8 +466,46 @@ body {
 
 .question-row {
     display: grid;
-    grid-template-columns: 240px minmax(0, 1fr) 80px;
+    grid-template-columns: 330px minmax(0, 1fr) 80px;
     gap: 8px;
+}
+
+.type-info-box {
+    margin: 4px 0 8px;
+    padding: 8px 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 7px;
+    color: #1e3a8a;
+    font-size: 13px;
+}
+
+.choice-box {
+    display: none;
+    margin-top: 8px;
+    padding: 12px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.choice-help {
+    margin: 0 0 10px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.choice-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 90px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.choice-row label {
+    font-size: 14px;
+    color: #374151;
 }
 
 .clear-question-btn {
@@ -348,6 +547,106 @@ body {
     padding: 10px 18px;
 }
 
+.writing-builder-page {
+    min-height: calc(100vh - 58px);
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
+}
+
+.writing-topbar {
+    height: 52px;
+    padding: 0 18px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.writing-topbar span {
+    margin-left: 8px;
+    color: #6b7280;
+}
+
+.writing-builder-wrapper {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 18px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.writing-task-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.writing-task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.writing-task-header h3 {
+    margin: 0;
+}
+
+.writing-task-header span {
+    background: #eff6ff;
+    color: #1e40af;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.writing-task-card label {
+    display: block;
+    margin: 12px 0 6px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.writing-input,
+.writing-textarea {
+    width: 100%;
+    border: 1px solid #cfd4dc;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 15px;
+}
+
+.writing-textarea {
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.writing-image-preview img {
+    max-width: 100%;
+    max-height: 280px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.writing-bottom-bar{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:20px;
+    padding:20px;
+    background:#fff;
+    border-top:1px solid #ddd;
+}
+.writing-builder-page {
+    padding-bottom: 90px;
+}
+
 @media (max-width: 900px) {
     body {
         overflow: auto;
@@ -376,7 +675,8 @@ body {
         min-height: 360px;
     }
 
-    .question-row {
+    .question-row,
+    .choice-row {
         grid-template-columns: 1fr;
     }
 
@@ -385,6 +685,11 @@ body {
         padding: 10px 14px;
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .writing-builder-wrapper {
+        grid-template-columns: 1fr;
+        padding: 12px;
     }
 }
 </style>
@@ -395,6 +700,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const parts = document.querySelectorAll('.builder-part');
     const clearButtons = document.querySelectorAll('.clear-question-btn');
     const builderForm = document.getElementById('examBuilderForm');
+    const questionTypeSelects = document.querySelectorAll('.question-type-select');
+
+    const inputTypeLabels = {
+        text: 'Text / Completion = input text',
+        inline_completion: 'Inline Completion = text ichidagi input, masalan [31]',
+        single_choice: 'Single Choice = radio',
+        multiple_choice: 'Multiple Choice = checkbox',
+        dropdown: 'Matching / Dropdown = select',
+        map_dropdown: 'Map / Diagram Dropdown = select',
+        table_completion: 'Table Completion = table input',
+        table_dropdown: 'Table Dropdown Matching = table + select'
+    };
+
+    const choiceTypes = [
+        'single_choice',
+        'multiple_choice',
+        'dropdown',
+        'map_dropdown',
+        'table_dropdown'
+    ];
 
     if (builderForm) {
         builderForm.addEventListener('submit', function (event) {
@@ -424,6 +749,34 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    function updateListeningTypeUI() {
+        questionTypeSelects.forEach(function (select) {
+            const editor = select.closest('.question-editor');
+            const choiceBox = editor.querySelector('.choice-box');
+            const typeInfoText = editor.querySelector('.type-info-text');
+
+            if (typeInfoText && inputTypeLabels[select.value]) {
+                typeInfoText.textContent = inputTypeLabels[select.value];
+            }
+
+            if (!choiceBox) {
+                return;
+            }
+
+            if (choiceTypes.includes(select.value)) {
+                choiceBox.style.display = 'block';
+            } else {
+                choiceBox.style.display = 'none';
+            }
+        });
+    }
+
+    questionTypeSelects.forEach(function (select) {
+        select.addEventListener('change', updateListeningTypeUI);
+    });
+
+    updateListeningTypeUI();
+
     clearButtons.forEach(function (button) {
         button.addEventListener('click', function () {
             const questionNumber = button.dataset.question;
@@ -440,6 +793,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 '[name="question_type_' + questionNumber + '"]'
             );
 
+            const options = document.querySelectorAll(
+                '[name^="option_' + questionNumber + '_"]'
+            );
+
+            const correctOptions = document.querySelectorAll(
+                '[name="correct_option_' + questionNumber + '"]'
+            );
+
             if (questionText) {
                 questionText.value = '';
             }
@@ -451,6 +812,16 @@ document.addEventListener('DOMContentLoaded', function () {
             if (questionType) {
                 questionType.value = 'text';
             }
+
+            options.forEach(function (input) {
+                input.value = '';
+            });
+
+            correctOptions.forEach(function (checkbox) {
+                checkbox.checked = false;
+            });
+
+            updateListeningTypeUI();
         });
     });
 });

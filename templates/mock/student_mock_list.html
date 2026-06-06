@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="student-mock-page">
+    <h2>Available Mocks</h2>
+
+    {% if mocks %}
+        <div class="mock-grid">
+            {% for mock in mocks %}
+                <div class="mock-card">
+                    <h3>{{ mock.title }}</h3>
+
+                    <p>
+                        Type: <strong>{{ mock.mock_type|title }}</strong>
+                    </p>
+
+                    <p>
+                        Duration: {{ mock.duration_minutes }} min
+                    </p>
+
+                    {% if mock.mock_type == 'reading' or mock.mock_type == 'listening' or mock.mock_type == 'writing' %}
+                        <a href="{% url 'take_mock' mock.id %}" class="start-btn">
+                            Start Mock
+                        </a>
+                    {% else %}
+                        <button class="disabled-btn" disabled>
+                            Coming soon
+                        </button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-box">
+            Hozircha mock mavjud emas.
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.student-mock-page {
+    padding: 20px;
+}
+
+.mock-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.mock-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.mock-card h3 {
+    margin-top: 0;
+}
+
+.start-btn {
+    display: inline-block;
+    background: #2563eb;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.start-btn:hover {
+    opacity: 0.92;
+}
+
+.disabled-btn {
+    background: #e5e7eb;
+    color: #6b7280;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+}
+
+.empty-box {
+    padding: 28px;
+    background: #f9fafb;
+    border-radius: 12px;
+    color: #6b7280;
+    text-align: center;
+}
+</style>
+
+{% endblock %}

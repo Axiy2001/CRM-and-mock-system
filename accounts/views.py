@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model
 
-from .forms import StudentCreateForm, MockCreatorCreateForm
+from .forms import StudentCreateForm, MockCreatorCreateForm, AssistantAdminCreateForm
 from academics.models import StudentClass
 from tracking.models import Attendance, HomeworkStatus
 
@@ -88,7 +88,27 @@ def create_mock_creator(request):
         {'form': form}
     )
 
+def create_assistant_admin(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
 
+    if request.user.role != 'super_admin':
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = AssistantAdminCreateForm(request.POST)
+
+        if form.is_valid():
+            form.save()
+            return redirect('cabinet')
+    else:
+        form = AssistantAdminCreateForm()
+
+    return render(
+        request,
+        'accounts/create_assistant_admin.html',
+        {'form': form}
+    )
 def student_profile(request, student_id):
     if not request.user.is_authenticated:
         return redirect('login')

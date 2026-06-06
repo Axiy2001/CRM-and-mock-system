@@ -1,0 +1,420 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<form method="post" class="listening-exam-page" id="studentExamForm">
+    {% csrf_token %}
+
+    <div class="exam-topbar">
+        <div>
+            <strong>{{ mock.title }}</strong>
+            <span>Listening Exam</span>
+        </div>
+
+        <button type="submit" class="submit-btn">
+            Submit Mock
+        </button>
+    </div>
+
+    {% for item in parts_data %}
+        <section
+            class="student-part {% if forloop.first %}active{% endif %}"
+            id="student-part-{{ item.part.order }}"
+        >
+            <div class="instruction-box">
+                <strong>Part {{ item.part.order }}</strong>
+                <br>
+                {{ item.part.instruction }}
+            </div>
+
+            {% if item.part.audio_file %}
+                <div class="audio-box">
+                    <audio controls controlsList="nodownload" class="audio-player">
+                        <source src="{{ item.part.audio_file.url }}">
+                    </audio>
+                </div>
+            {% endif %}
+
+            <div class="student-layout">
+                <div class="student-content">
+                    {% if item.part.image %}
+                        <img src="{{ item.part.image.url }}" class="part-image" alt="Part image">
+                    {% endif %}
+
+                    <div class="content-text">
+                        {% for segment in item.segments %}
+                            {% if segment.is_input %}
+                                <input
+                                    type="text"
+                                    name="answer_{{ segment.number }}"
+                                    class="inline-answer"
+                                    placeholder="{{ segment.number }}"
+                                >
+                            {% else %}
+                                {{ segment.text|linebreaksbr }}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="student-questions">
+                    {% for question in item.questions %}
+                        {% if question.question_type != 'inline_completion' %}
+                            <div class="student-question">
+                                <div class="question-title">
+                                    <strong>{{ question.order }}.</strong>
+                                    {{ question.question_text }}
+                                </div>
+
+                                {% if question.question_type == 'text' or question.question_type == 'table_completion' %}
+                                    <input
+                                        type="text"
+                                        name="answer_{{ question.order }}"
+                                        class="answer-input"
+                                        placeholder="Answer {{ question.order }}"
+                                    >
+                                {% endif %}
+
+                                {% if question.question_type == 'single_choice' %}
+                                    {% for choice in question.choices.all %}
+                                        <label class="option-line">
+                                            <input
+                                                type="radio"
+                                                name="answer_{{ question.order }}"
+                                                value="{{ choice.text }}"
+                                            >
+                                            {{ choice.text }}
+                                        </label>
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% if question.question_type == 'multiple_choice' %}
+                                    {% for choice in question.choices.all %}
+                                        <label class="option-line">
+                                            <input
+                                                type="checkbox"
+                                                name="answer_{{ question.order }}"
+                                                value="{{ choice.text }}"
+                                            >
+                                            {{ choice.text }}
+                                        </label>
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% if question.question_type == 'dropdown' or question.question_type == 'map_dropdown' or question.question_type == 'table_dropdown' %}
+                                    <select
+                                        name="answer_{{ question.order }}"
+                                        class="answer-input"
+                                    >
+                                        <option value="">-- Select --</option>
+
+                                        {% for choice in question.choices.all %}
+                                            <option value="{{ choice.text }}">
+                                                {{ choice.text }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endfor %}
+
+    <div class="exam-bottom-nav">
+        <div class="part-buttons">
+            {% for item in parts_data %}
+                <button
+                    type="button"
+                    class="part-tab {% if forloop.first %}active{% endif %}"
+                    data-part="{{ item.part.order }}"
+                >
+                    Part {{ item.part.order }}
+                </button>
+            {% endfor %}
+        </div>
+
+        <div class="nav-buttons">
+            <button type="button" id="prevPartBtn">
+                Previous
+            </button>
+
+            <button type="button" id="nextPartBtn">
+                Next
+            </button>
+        </div>
+    </div>
+</form>
+
+<style>
+body {
+    overflow: hidden;
+}
+
+.container {
+    max-width: none;
+    width: 100%;
+    height: calc(100vh - 58px);
+    padding: 0;
+    margin: 0;
+}
+
+.listening-exam-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+.exam-topbar {
+    height: 52px;
+    padding: 0 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.exam-topbar span {
+    color: #6b7280;
+    margin-left: 8px;
+}
+
+.submit-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.student-part {
+    display: none;
+    flex: 1;
+    min-height: 0;
+}
+
+.student-part.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.instruction-box {
+    margin: 14px 16px 10px;
+    padding: 14px 16px;
+    background: #f1f1ed;
+    border: 1px solid #e5e5df;
+    border-radius: 5px;
+    flex-shrink: 0;
+}
+
+.audio-box {
+    padding: 0 16px 12px;
+}
+
+.audio-player {
+    width: 100%;
+}
+
+.student-layout {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid #eeeeee;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.student-content,
+.student-questions {
+    min-height: 0;
+    overflow-y: auto;
+    padding: 18px;
+}
+
+.student-content {
+    border-right: 6px solid #eeeeee;
+}
+
+.part-image {
+    max-width: 100%;
+    max-height: 360px;
+    display: block;
+    margin-bottom: 16px;
+    border-radius: 8px;
+}
+
+.content-text {
+    font-size: 17px;
+    line-height: 1.9;
+    white-space: pre-wrap;
+}
+
+.inline-answer {
+    width: 140px;
+    padding: 8px;
+    margin: 0 4px;
+    border: 1px solid #cfd4dc;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.student-question {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.question-title {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.answer-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cfd4dc;
+    border-radius: 7px;
+}
+
+.option-line {
+    display: block;
+    margin: 8px 0;
+}
+
+.exam-bottom-nav {
+    height: 70px;
+    border-top: 1px solid #dcdcdc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px 12px;
+    gap: 10px;
+}
+
+.part-buttons,
+.nav-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.part-tab {
+    background: white;
+    color: #111827;
+    border: 1px solid #cfd4dc;
+    padding: 8px 13px;
+}
+
+.part-tab.active {
+    border: 2px solid #111827;
+    font-weight: 700;
+}
+
+.nav-buttons button {
+    padding: 8px 14px;
+}
+
+@media (max-width: 900px) {
+    body {
+        overflow: auto;
+    }
+
+    .container,
+    .listening-exam-page {
+        height: auto;
+        min-height: calc(100vh - 58px);
+    }
+
+    .student-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .student-content {
+        border-right: none;
+        border-bottom: 6px solid #eeeeee;
+    }
+
+    .exam-bottom-nav {
+        height: auto;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px 14px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = document.querySelectorAll('.part-tab');
+    const parts = document.querySelectorAll('.student-part');
+    const prevBtn = document.getElementById('prevPartBtn');
+    const nextBtn = document.getElementById('nextPartBtn');
+    const form = document.getElementById('studentExamForm');
+
+    let currentPart = 1;
+    const totalParts = parts.length;
+
+    function pauseAllAudio() {
+        document.querySelectorAll('audio').forEach(function (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+        });
+    }
+
+    function showPart(partNumber) {
+        currentPart = partNumber;
+
+        tabs.forEach(function (tab) {
+            tab.classList.remove('active');
+        });
+
+        parts.forEach(function (part) {
+            part.classList.remove('active');
+        });
+
+        const activeTab = document.querySelector('[data-part="' + partNumber + '"]');
+        const activePart = document.getElementById('student-part-' + partNumber);
+
+        if (activeTab) {
+            activeTab.classList.add('active');
+        }
+
+        if (activePart) {
+            activePart.classList.add('active');
+        }
+
+        pauseAllAudio();
+    }
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            showPart(parseInt(tab.dataset.part));
+        });
+    });
+
+    prevBtn.addEventListener('click', function () {
+        if (currentPart > 1) {
+            showPart(currentPart - 1);
+        }
+    });
+
+    nextBtn.addEventListener('click', function () {
+        if (currentPart < totalParts) {
+            showPart(currentPart + 1);
+        }
+    });
+
+    form.addEventListener('submit', function (event) {
+        const confirmed = confirm('Mockni yakunlashga ishonchingiz komilmi?');
+
+        if (!confirmed) {
+            event.preventDefault();
+        }
+    });
+});
+</script>
+
+{% endblock %}

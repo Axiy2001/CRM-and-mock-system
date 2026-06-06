@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="result-card">
+    <h2>Mock Result</h2>
+
+    <p>
+        <strong>Mock:</strong> {{ mock.title }}
+    </p>
+
+    <p class="score">
+        {{ score }} / {{ total_questions }}
+    </p>
+
+    <a href="{% url 'mock_list' %}">
+        Back to mocks
+    </a>
+</div>
+
+<style>
+.result-card {
+    max-width: 520px;
+    margin: 40px auto;
+    background: white;
+    padding: 28px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.score {
+    font-size: 42px;
+    font-weight: 800;
+    color: #2563eb;
+}
+</style>
+
+{% endblock %}

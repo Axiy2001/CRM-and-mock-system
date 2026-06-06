@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="form-card">
+	<h2>Create Assistant Admin</h2>
+
+	<form method="post">
+		{% csrf_token %}
+
+		{{ form.as_p }}
+
+		<button type="submit">
+			Save Assistant Admin
+		</button>
+	</form>
+
+	<br>
+
+	<a href="{% url 'cabinet' %}">
+		Back
+	</a>
+</div>
+
+{% endblock %}

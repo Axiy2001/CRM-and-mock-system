@@ -9,4 +9,5 @@ urlpatterns = [
     path('students/<int:student_id>/', views.student_profile, name='student_profile'),
 
     path('mock-creators/create/', views.create_mock_creator, name='create_mock_creator'),
+	 path('assistant-admins/create/', views.create_assistant_admin, name='create_assistant_admin'),
 ]

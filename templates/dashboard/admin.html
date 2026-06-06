@@ -2,267 +2,256 @@
 
 {% block content %}
 
-<h2>Admin Dashboard</h2>
+<div class="admin-dashboard">
 
-<p>
-    Salom,
-    {{ user.first_name }}
-    {{ user.last_name }}
-    ({{ user.role }})
-</p>
+    <div class="dashboard-header">
+        <div>
+            <h2>Admin Dashboard</h2>
+            <p>
+                Salom,
+                {{ user.first_name }} {{ user.last_name }}
+                <span>({{ user.role }})</span>
+            </p>
+        </div>
+    </div>
 
-<hr>
+    <section class="dashboard-section">
+        <h3>Admin Actions</h3>
 
-<h3>Admin Actions</h3>
+        <div class="admin-actions-grid">
 
-<a href="{% url 'create_student' %}">
-    Create Student
-</a>
-
-{% if user.role == 'assistant_admin' %}
-    <br>
-
-    <a href="{% url 'attendance_list' %}">
-        Attendance
-    </a>
-{% endif %}
-
-{% if user.role == 'super_admin' %}
-    <br>
-
-    <a href="{% url 'create_class' %}">
-        Create Class
-    </a>
-
-    <br>
-
-    <a href="{% url 'create_mock_creator' %}">
-        Create Mock Creator
-    </a>
-{% endif %}
-
-<hr>
-
-<h3>Mening classlarim</h3>
-
-{% if managed_classes %}
-
-<table>
-
-    <tr>
-        <th>Class</th>
-        <th>Subject</th>
-        <th>Teacher</th>
-
-        {% if user.role == 'super_admin' %}
-            <th>Assistant Admin</th>
-        {% endif %}
-
-        <th>Actions</th>
-    </tr>
-
-    {% for cls in managed_classes %}
-    <tr>
-
-        <td>{{ cls.name }}</td>
-
-        <td>
-            {% if cls.subject %}
-                {{ cls.subject }}
-            {% else %}
-                -
-            {% endif %}
-        </td>
-
-        <td>
-            {% if cls.teacher %}
-                {{ cls.teacher.username }}
-            {% else %}
-                <span style="color:red;">
-                    Teacher biriktirilmagan
-                </span>
-            {% endif %}
-        </td>
-
-        {% if user.role == 'super_admin' %}
-        <td>
-            {% if cls.assistant_admin %}
-                {{ cls.assistant_admin.username }}
-            {% else %}
-                -
-            {% endif %}
-        </td>
-        {% endif %}
-
-        <td>
-
-            <a href="{% url 'assign_teacher' cls.id %}">
-                Assign Teacher
+            <a href="{% url 'create_student' %}" class="admin-action-card">
+                <div class="action-icon">👨‍🎓</div>
+                <div>
+                    <strong>Create Student</strong>
+                    <p>Yangi student qo‘shish</p>
+                </div>
             </a>
 
-            |
-
-            <a href="{% url 'manage_students' cls.id %}">
-                Manage Students
-            </a>
-
-            {% if user.role == 'super_admin' %}
-                |
-
-                <a href="{% url 'assign_assistant_admin' cls.id %}">
-                    Assign Admin
+            {% if user.role == 'assistant_admin' %}
+                <a href="{% url 'attendance_list' %}" class="admin-action-card">
+                    <div class="action-icon">✅</div>
+                    <div>
+                        <strong>Attendance</strong>
+                        <p>Davomatni ko‘rish</p>
+                    </div>
                 </a>
             {% endif %}
 
-        </td>
+            {% if user.role == 'super_admin' %}
+                <a href="{% url 'create_class' %}" class="admin-action-card">
+                    <div class="action-icon">🏫</div>
+                    <div>
+                        <strong>Create Class</strong>
+                        <p>Yangi class yaratish</p>
+                    </div>
+                </a>
 
-    </tr>
-    {% endfor %}
+                <a href="{% url 'create_mock_creator' %}" class="admin-action-card">
+                    <div class="action-icon">🧪</div>
+                    <div>
+                        <strong>Create Mock Creator</strong>
+                        <p>Mock yaratuvchi qo‘shish</p>
+                    </div>
+                </a>
 
-</table>
+                <a href="{% url 'create_assistant_admin' %}" class="admin-action-card">
+                    <div class="action-icon">🛡️</div>
+                    <div>
+                        <strong>Create Assistant Admin</strong>
+                        <p>Assistant admin qo‘shish</p>
+                    </div>
+                </a>
+            {% endif %}
 
-{% else %}
+        </div>
+    </section>
 
-<p>
-    Sizga hali class biriktirilmagan.
-</p>
+    <section class="dashboard-section">
+        <h3>Mening classlarim</h3>
 
-{% endif %}
+        {% if managed_classes %}
 
-<hr>
+            <div class="table-wrapper">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Class</th>
+                            <th>Subject</th>
+                            <th>Teacher</th>
 
-<h3>Umumiy statistika</h3>
+                            {% if user.role == 'super_admin' %}
+                                <th>Assistant Admin</th>
+                            {% endif %}
 
-<table>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
 
-    <tr>
-        <th>Bo‘lim</th>
-        <th>Soni</th>
-    </tr>
+                    <tbody>
+                        {% for cls in managed_classes %}
+                        <tr>
+                            <td>{{ cls.name }}</td>
 
-    <tr>
-        <td>Students</td>
-        <td>{{ total_students }}</td>
-    </tr>
+                            <td>
+                                {% if cls.subject %}
+                                    {{ cls.subject }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
 
-    <tr>
-        <td>Teachers</td>
-        <td>{{ total_teachers }}</td>
-    </tr>
+                            <td>
+                                {% if cls.teacher %}
+                                    {{ cls.teacher.username }}
+                                {% else %}
+                                    <span class="danger-text">Teacher biriktirilmagan</span>
+                                {% endif %}
+                            </td>
 
-    <tr>
-        <td>Classes</td>
-        <td>{{ total_classes }}</td>
-    </tr>
+                            {% if user.role == 'super_admin' %}
+                            <td>
+                                {% if cls.assistant_admin %}
+                                    {{ cls.assistant_admin.username }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            {% endif %}
 
-    <tr>
-        <td>Homeworks</td>
-        <td>{{ total_homeworks }}</td>
-    </tr>
+                            <td class="table-actions">
+                                <a href="{% url 'assign_teacher' cls.id %}">
+                                    Assign Teacher
+                                </a>
 
-    <tr>
-        <td>Attendances</td>
-        <td>{{ total_attendances }}</td>
-    </tr>
+                                <a href="{% url 'manage_students' cls.id %}">
+                                    Manage Students
+                                </a>
 
-</table>
+                                {% if user.role == 'super_admin' %}
+                                    <a href="{% url 'assign_assistant_admin' cls.id %}">
+                                        Assign Admin
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-<hr>
+        {% else %}
 
-<h3>Homework statistikasi</h3>
+            <div class="empty-box">
+                Sizga hali class biriktirilmagan.
+            </div>
 
-<ul>
-    <li>Done: {{ done_count }}</li>
-    <li>Not Done: {{ not_done_count }}</li>
-    <li>Partial: {{ partial_count }}</li>
-</ul>
+        {% endif %}
+    </section>
 
-<hr>
+    <section class="dashboard-section">
+        <h3>Umumiy statistika</h3>
 
-<h3>Bugungi o‘zgarishlar</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>Students</span>
+                <strong>{{ total_students }}</strong>
+            </div>
 
-<ul>
-    <li>
-        Bugun qo‘shilgan studentlar:
-        {{ today_students_added }}
-    </li>
+            <div class="stat-card">
+                <span>Teachers</span>
+                <strong>{{ total_teachers }}</strong>
+            </div>
 
-    <li>
-        Bugun ketgan studentlar:
-        {{ today_students_deactivated }}
-    </li>
+            <div class="stat-card">
+                <span>Classes</span>
+                <strong>{{ total_classes }}</strong>
+            </div>
 
-    <li>
-        Jami aktiv studentlar:
-        {{ active_students }}
-    </li>
+            <div class="stat-card">
+                <span>Homeworks</span>
+                <strong>{{ total_homeworks }}</strong>
+            </div>
 
-    <li>
-        Bugun qo‘shilgan teacherlar:
-        {{ today_teachers_added }}
-    </li>
+            <div class="stat-card">
+                <span>Attendances</span>
+                <strong>{{ total_attendances }}</strong>
+            </div>
+        </div>
+    </section>
 
-    <li>
-        Bugun yaratilgan classlar:
-        {{ today_classes_created }}
-    </li>
-</ul>
+    <section class="dashboard-section">
+        <h3>Homework statistikasi</h3>
 
-<hr>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>Done</span>
+                <strong>{{ done_count }}</strong>
+            </div>
 
-<h3>Oylik / Yillik statistika</h3>
+            <div class="stat-card">
+                <span>Not Done</span>
+                <strong>{{ not_done_count }}</strong>
+            </div>
 
-<form method="get">
+            <div class="stat-card">
+                <span>Partial</span>
+                <strong>{{ partial_count }}</strong>
+            </div>
+        </div>
+    </section>
 
-    <select name="period">
+    <section class="dashboard-section">
+        <h3>Oylik / Yillik statistika</h3>
 
-        <option value="month" {% if period == 'month' %}selected{% endif %}>
-            Oylik
-        </option>
+        <form method="get" class="period-form">
+            <select name="period">
+                <option value="month" {% if period == 'month' %}selected{% endif %}>
+                    Oylik
+                </option>
 
-        <option value="year" {% if period == 'year' %}selected{% endif %}>
-            Yillik
-        </option>
+                <option value="year" {% if period == 'year' %}selected{% endif %}>
+                    Yillik
+                </option>
+            </select>
 
-    </select>
+            <button type="submit">
+                Ko‘rsatish
+            </button>
+        </form>
 
-    <button type="submit">
-        Ko‘rsatish
-    </button>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span>Qo‘shilgan studentlar</span>
+                <strong>{{ students_added_period }}</strong>
+            </div>
 
-</form>
+            <div class="stat-card">
+                <span>Ketgan studentlar</span>
+                <strong>{{ students_deactivated_period }}</strong>
+            </div>
 
-<ul>
+            <div class="stat-card">
+                <span>Aktiv studentlar</span>
+                <strong>{{ active_students }}</strong>
+            </div>
 
-    <li>
-        Qo‘shilgan studentlar:
-        {{ students_added_period }}
-    </li>
+            <div class="stat-card">
+                <span>Qo‘shilgan teacherlar</span>
+                <strong>{{ teachers_added_period }}</strong>
+            </div>
 
-    <li>
-        Ketgan studentlar:
-        {{ students_deactivated_period }}
-    </li>
+            <div class="stat-card">
+                <span>Yaratilgan classlar</span>
+                <strong>{{ classes_created_period }}</strong>
+            </div>
+        </div>
 
-    <li>
-        Jami aktiv studentlar:
-        {{ active_students }}
-    </li>
+        <div class="chart-box">
+            <canvas id="adminPeriodChart"></canvas>
+        </div>
+    </section>
 
-    <li>
-        Qo‘shilgan teacherlar:
-        {{ teachers_added_period }}
-    </li>
-
-    <li>
-        Yaratilgan classlar:
-        {{ classes_created_period }}
-    </li>
-
-</ul>
-
-<div style="width:520px; height:300px; margin-top:10px;">
-    <canvas id="adminPeriodChart"></canvas>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -313,5 +302,197 @@ new Chart(adminPeriodElement, {
     }
 });
 </script>
+
+<style>
+.admin-dashboard {
+    padding: 20px;
+}
+
+.dashboard-header {
+    background: #ffffff;
+    padding: 22px;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    margin-bottom: 20px;
+}
+
+.dashboard-header h2 {
+    margin: 0 0 6px;
+}
+
+.dashboard-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.dashboard-header span {
+    font-weight: 600;
+    color: #2563eb;
+}
+
+.dashboard-section {
+    background: #ffffff;
+    padding: 22px;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    margin-bottom: 20px;
+}
+
+.dashboard-section h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+.admin-actions-grid,
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.admin-action-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    text-decoration: none;
+    color: #111827;
+    transition: 0.2s;
+}
+
+.admin-action-card:hover {
+    background: #eef2ff;
+    border-color: #2563eb;
+    transform: translateY(-2px);
+}
+
+.action-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.admin-action-card strong {
+    font-size: 16px;
+}
+
+.admin-action-card p {
+    margin: 4px 0 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dashboard-table th {
+    background: #f3f4f6;
+    text-align: left;
+    padding: 14px;
+    font-size: 14px;
+}
+
+.dashboard-table td {
+    padding: 14px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+
+.table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.table-actions a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.table-actions a:hover {
+    text-decoration: underline;
+}
+
+.danger-text {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.empty-box {
+    padding: 26px;
+    background: #f9fafb;
+    border-radius: 12px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.stat-card {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 18px;
+}
+
+.stat-card span {
+    display: block;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.stat-card strong {
+    font-size: 28px;
+    color: #111827;
+}
+
+.period-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.period-form select,
+.period-form button {
+    padding: 10px 12px;
+}
+
+.chart-box {
+    width: 100%;
+    max-width: 640px;
+    height: 320px;
+    margin-top: 20px;
+}
+
+@media (max-width: 700px) {
+    .admin-dashboard {
+        padding: 12px;
+    }
+
+    .period-form {
+        flex-direction: column;
+    }
+
+    .chart-box {
+        height: 280px;
+    }
+}
+</style>
 
 {% endblock %}

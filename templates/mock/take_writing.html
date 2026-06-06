@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<form method="post" class="writing-exam-page" id="writingExamForm">
+    {% csrf_token %}
+
+    <div class="writing-exam-topbar">
+        <div>
+            <strong>{{ mock.title }}</strong>
+            <span>Writing Exam</span>
+        </div>
+
+        <div class="timer-box">
+            Time: <span id="timer">60:00</span>
+        </div>
+    </div>
+
+    <div class="writing-exam-wrapper">
+
+        {% for task in tasks %}
+            <section class="writing-task-section">
+                <div class="writing-task-left">
+                    <div class="task-info-card">
+                        <h2>{{ task.title }}</h2>
+
+                        <p class="minimum-info">
+                            Write at least {{ task.minimum_words }} words.
+                        </p>
+
+                        <div class="task-instruction">
+                            {{ task.instruction|linebreaks }}
+                        </div>
+
+                        {% if task.image %}
+                            <img
+                                src="{{ task.image.url }}"
+                                alt="Writing task image"
+                                class="writing-task-image"
+                            >
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="writing-task-right">
+                    <label class="answer-label">
+                        Your Answer
+                    </label>
+
+                    <textarea
+                        name="task{{ task.order }}_answer"
+                        class="writing-answer"
+                        data-word-target="word_count_{{ task.order }}"
+                        placeholder="Write your answer here..."
+                    ></textarea>
+
+                    <div class="word-counter">
+                        Minimum: {{ task.minimum_words }}
+                        |
+                        Words:
+                        <span id="word_count_{{ task.order }}">0</span>
+                    </div>
+                </div>
+            </section>
+        {% endfor %}
+
+    </div>
+
+    <div class="writing-submit-bar">
+        <button type="submit" class="finish-writing-btn">
+            Finish Writing
+        </button>
+    </div>
+</form>
+
+<style>
+body {
+    overflow: hidden;
+}
+
+.container {
+    max-width: none;
+    width: 100%;
+    height: calc(100vh - 58px);
+    padding: 0;
+    margin: 0;
+}
+
+.writing-exam-page {
+    height: 100%;
+    background: #f9fafb;
+    display: flex;
+    flex-direction: column;
+}
+
+.writing-exam-topbar {
+    height: 56px;
+    padding: 0 18px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.writing-exam-topbar span {
+    color: #6b7280;
+    margin-left: 8px;
+}
+
+.timer-box {
+    background: #eff6ff;
+    color: #1e40af;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.writing-exam-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+}
+
+.writing-task-section {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    display: grid;
+    grid-template-columns: 42% 58%;
+    gap: 0;
+    margin-bottom: 18px;
+    min-height: 560px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.writing-task-left {
+    border-right: 1px solid #e5e7eb;
+    padding: 22px;
+    overflow-y: auto;
+}
+
+.writing-task-right {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+}
+
+.task-info-card h2 {
+    margin-top: 0;
+}
+
+.minimum-info {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.task-instruction {
+    line-height: 1.7;
+    margin-top: 16px;
+}
+
+.writing-task-image {
+    max-width: 100%;
+    margin-top: 16px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.answer-label {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.writing-answer {
+    flex: 1;
+    min-height: 420px;
+    width: 100%;
+    resize: vertical;
+    border: 1px solid #cfd4dc;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.word-counter {
+    margin-top: 10px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.writing-submit-bar {
+    height: 70px;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 18px;
+}
+
+.finish-writing-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+@media (max-width: 900px) {
+    body {
+        overflow: auto;
+    }
+
+    .container,
+    .writing-exam-page {
+        height: auto;
+        min-height: calc(100vh - 58px);
+    }
+
+    .writing-task-section {
+        grid-template-columns: 1fr;
+    }
+
+    .writing-task-left {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const textareas = document.querySelectorAll('.writing-answer');
+    const form = document.getElementById('writingExamForm');
+    const timerElement = document.getElementById('timer');
+
+    let seconds = 60 * 60;
+
+    function countWords(text) {
+        return text.trim().split(/\s+/).filter(Boolean).length;
+    }
+
+    textareas.forEach(function (textarea) {
+        const targetId = textarea.dataset.wordTarget;
+        const counter = document.getElementById(targetId);
+
+        textarea.addEventListener('input', function () {
+            counter.textContent = countWords(textarea.value);
+        });
+    });
+
+    function updateTimer() {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+
+        timerElement.textContent =
+            String(minutes).padStart(2, '0') +
+            ':' +
+            String(remainingSeconds).padStart(2, '0');
+
+        if (seconds > 0) {
+            seconds -= 1;
+        }
+    }
+
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    form.addEventListener('submit', function (event) {
+        const confirmed = confirm('Writing testni yakunlashga ishonchingiz komilmi?');
+
+        if (!confirmed) {
+            event.preventDefault();
+        }
+    });
+});
+</script>
+
+{% endblock %}
