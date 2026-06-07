@@ -336,6 +336,11 @@ class WritingSubmission(models.Model):
         null=True,
         blank=True
     )
+    class Meta:
+        unique_together = (
+           'student',
+           'mock'
+    )
 
     def __str__(self):
         return f"{self.student.username} - {self.mock.title} Writing"

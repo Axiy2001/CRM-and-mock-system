@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="submitted-card">
+    <h2>Writing Submitted Successfully</h2>
+
+    <p>
+        Your writing answers have been saved.
+    </p>
+
+    <a href="{% url 'mock_list' %}">
+        Back To Mocks
+    </a>
+</div>
+
+<style>
+.submitted-card {
+    max-width: 620px;
+    margin: 60px auto;
+    background: white;
+    padding: 36px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.submitted-card a {
+    display: inline-block;
+    margin-top: 18px;
+    background: #2563eb;
+    color: white;
+    padding: 11px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+}
+</style>
+
+{% endblock %}

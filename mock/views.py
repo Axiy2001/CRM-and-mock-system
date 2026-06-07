@@ -397,7 +397,7 @@ def ensure_writing_structure(mock):
         )
 
         task.task_type = data['task_type']
-        task.title = request_title = task.title or data['title']
+        task.title = task.title or data['title']
         task.save()
 
 
@@ -635,7 +635,6 @@ def take_mock(request, mock_id):
                         submitted_values = request.POST.getlist(
                             f'answer_{question.order}'
                         )
-
                         student_answer = ', '.join(submitted_values)
                     else:
                         student_answer = request.POST.get(
@@ -703,6 +702,34 @@ def take_mock(request, mock_id):
         tasks = WritingTask.objects.filter(
             mock=mock
         ).order_by('order')
+
+        if request.method == 'POST':
+            task1_answer = request.POST.get(
+                'task1_answer',
+                ''
+            ).strip()
+
+            task2_answer = request.POST.get(
+                'task2_answer',
+                ''
+            ).strip()
+
+            WritingSubmission.objects.update_or_create(
+                student=request.user,
+                mock=mock,
+                defaults={
+                    'task1_answer': task1_answer,
+                    'task2_answer': task2_answer,
+                }
+            )
+
+            return render(
+                request,
+                'mock/writing_submitted.html',
+                {
+                    'mock': mock,
+                }
+            )
 
         return render(
             request,
