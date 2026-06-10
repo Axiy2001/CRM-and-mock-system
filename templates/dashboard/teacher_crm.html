@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="teachers-page">
+    <div class="page-header">
+        <div>
+            <h2>Teacher Performance CRM</h2>
+            <p>Teachers, activity scores and performance overview.</p>
+        </div>
+
+        <a href="{% url 'assistant_dashboard' %}">
+            Back to Dashboard
+        </a>
+    </div>
+
+    <div class="teachers-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Teacher</th>
+                    <th>Classes</th>
+                    <th>Students</th>
+                    <th>Attendance</th>
+                    <th>Homework</th>
+                    <th>Student Load</th>
+                    <th>Overall</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in teacher_data %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.teacher.username }}</strong>
+                            <span>
+                                {{ item.teacher.first_name }} {{ item.teacher.last_name }}
+                            </span>
+                        </td>
+
+                        <td>{{ item.classes_count }}</td>
+                        <td>{{ item.students_count }}</td>
+
+                        <td>
+                            <div class="mini-info">
+                                <strong>{{ item.attendance_score }}%</strong>
+                                <small>{{ item.attendance_count }} records</small>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="mini-info">
+                                <strong>{{ item.homework_score }}%</strong>
+                                <small>{{ item.checked_count }} checked</small>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="mini-info">
+                                <strong>{{ item.student_score }}%</strong>
+                                <small>{{ item.students_count }} students</small>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="progress-bar">
+                                <span style="width: {{ item.performance }}%;"></span>
+                            </div>
+
+                            <strong>{{ item.performance }}%</strong>
+                        </td>
+
+                        <td>
+                            <span class="status-badge status-{{ item.performance_status|slugify }}">
+                                {{ item.performance_status }}
+                            </span>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            No teachers found.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.teachers-page {
+    max-width: 1180px;
+    margin: 28px auto;
+    padding: 0 18px;
+}
+
+.page-header {
+    background: white;
+    padding: 22px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05);
+}
+
+.page-header h2 {
+    margin: 0;
+}
+
+.page-header p {
+    margin: 6px 0 0;
+    color: #6b7280;
+}
+
+.page-header a {
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.teachers-card {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05);
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 980px;
+}
+
+th, td {
+    padding: 14px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+    vertical-align: middle;
+}
+
+th {
+    background: #f9fafb;
+    color: #374151;
+}
+
+td span {
+    display: block;
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.mini-info strong {
+    display: block;
+}
+
+.mini-info small {
+    color: #6b7280;
+}
+
+.progress-bar {
+    width: 140px;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.progress-bar span {
+    display: block;
+    height: 100%;
+    background: #16a34a;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 7px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.status-excellent {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-good {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-needs-attention {
+    background: #fee2e2;
+    color: #991b1b;
+}
+</style>
+
+{% endblock %}

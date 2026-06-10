@@ -56,7 +56,6 @@ class QuestionCreateForm(forms.ModelForm):
         model = Question
         fields = [
             'question_text',
-            'question_type',
             'correct_answer',
             'order',
         ]

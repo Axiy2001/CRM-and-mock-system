@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="classes-page">
+    <div class="page-header">
+        <div>
+            <h2>Classes CRM</h2>
+            <p>Classes, teachers, assistant admins and active students.</p>
+        </div>
+
+        <a href="{% url 'assistant_dashboard' %}">Back to Dashboard</a>
+    </div>
+
+    <div class="classes-table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Class</th>
+                    <th>Subject</th>
+                    <th>Teacher</th>
+                    <th>Assistant Admin</th>
+                    <th>Monthly Price</th>
+                    <th>Active Students</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in classes_data %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.classroom.name }}</strong>
+                        </td>
+
+                        <td>
+                            {% if item.classroom.subject %}
+                                {{ item.classroom.subject }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.classroom.teacher %}
+                                {{ item.classroom.teacher.username }}
+                            {% else %}
+                                No teacher
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.classroom.assistant_admin %}
+                                {{ item.classroom.assistant_admin.username }}
+                            {% else %}
+                                No assistant
+                            {% endif %}
+                        </td>
+
+                        <td>{{ item.classroom.monthly_price }}</td>
+
+                        <td>{{ item.active_students_count }}</td>
+
+                        <td>
+                            <div class="actions">
+                                <a href="{% url 'manage_students' item.classroom.id %}">
+                                    Students
+                                </a>
+
+                                <a href="{% url 'assign_teacher' item.classroom.id %}">
+                                    Teacher
+                                </a>
+
+                                <a href="{% url 'payment_list' %}?class_id={{ item.classroom.id }}">
+                                    Payments
+                                </a>
+                            </div>
+                        </td>
+                    </tr>	
+                {% empty %}
+                    <tr>
+                        <td colspan="7">No classes found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.classes-page {
+    max-width: 1180px;
+    margin: 28px auto;
+    padding: 0 18px;
+}
+
+.page-header {
+    background: white;
+    padding: 22px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.page-header h2 {
+    margin: 0;
+}
+
+.page-header p {
+    color: #6b7280;
+    margin: 6px 0 0;
+}
+
+.page-header a {
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.classes-table-card {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 14px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+    vertical-align: middle;
+}
+
+th {
+    background: #f9fafb;
+    color: #374151;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.actions a {
+    background: #eff6ff;
+    color: #1d4ed8;
+    text-decoration: none;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.actions a:hover {
+    background: #dbeafe;
+}
+</style>
+
+{% endblock %}

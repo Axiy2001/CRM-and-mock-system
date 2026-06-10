@@ -7,9 +7,5 @@ urlpatterns = [
     path('<int:mock_id>/', views.mock_detail, name='mock_detail'),
     path('<int:mock_id>/take/', views.take_mock, name='take_mock'),
     path('<int:mock_id>/delete/', views.delete_mock, name='delete_mock'),
-	 path(
-    '<int:mock_id>/take/',
-    views.take_mock,
-    name='take_mock'
-),
+
 ]

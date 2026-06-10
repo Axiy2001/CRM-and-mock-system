@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="dashboard-header">
+    <div>
+        <h2>Assistant Admin Dashboard</h2>
+        <p>Today: {{ today }}</p>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <a href="{% url 'student_progress_list' %}">
+        📈 Progress
+    </a>
+
+    <a href="{% url 'attendance_list' %}">
+        📅 Attendance
+    </a>
+
+    <a href="{% url 'homework_list' %}">
+        📚 Homework
+    </a>
+
+    <a href="{% url 'payment_crm' %}">
+    💰 Payments
+	</a>
+
+    <a href="{% url 'students_crm' %}">
+    👨‍🎓 Students
+</a>
+
+	 <a href="{% url 'classes_crm' %}">
+    🏫 Classes
+</a>
+<a href="{% url 'teacher_crm' %}">
+    Teachers CRM
+</a>
+</div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span>Students</span>
+            <strong>{{ total_students }}</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Teachers</span>
+            <strong>{{ total_teachers }}</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Classes</span>
+            <strong>{{ total_classes }}</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Active Enrollments</span>
+            <strong>{{ active_student_classes }}</strong>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card success">
+            <span>Today Present</span>
+            <strong>{{ today_present }}</strong>
+        </div>
+
+        <div class="stat-card danger">
+            <span>Today Absent</span>
+            <strong>{{ today_absent }}</strong>
+        </div>
+
+        <div class="stat-card warning">
+            <span>Today Late</span>
+            <strong>{{ today_late }}</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Total Homeworks</span>
+            <strong>{{ total_homeworks }}</strong>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card success">
+            <span>Homework Done</span>
+            <strong>{{ homework_done }}</strong>
+        </div>
+
+        <div class="stat-card danger">
+            <span>Homework Not Done</span>
+            <strong>{{ homework_not_done }}</strong>
+        </div>
+
+        <div class="stat-card warning">
+            <span>Homework Partial</span>
+            <strong>{{ homework_partial }}</strong>
+        </div>
+
+        <div class="stat-card danger">
+            <span>Total Debt</span>
+            <strong>{{ total_debt }}</strong>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="panel">
+            <h3>Recent Classes</h3>
+
+            {% for class in classes %}
+                <div class="list-item">
+                    <div>
+                        <strong>{{ class.name }}</strong>
+                        <span>{{ class.subject }}</span>
+                    </div>
+                    <span>{{ class.monthly_price }}</span>
+                </div>
+            {% empty %}
+                <p>No classes yet.</p>
+            {% endfor %}
+        </div>
+
+        <div class="panel">
+            <h3>Unpaid Students</h3>
+
+            {% for payment in unpaid_payments %}
+                <div class="list-item">
+                    <div>
+                        <strong>{{ payment.student.username }}</strong>
+                        <span>{{ payment.classroom.name }}</span>
+                    </div>
+                    <span>{{ payment.debt }}</span>
+                </div>
+            {% empty %}
+                <p>No unpaid payments.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-page {
+    max-width: 1180px;
+    margin: 28px auto;
+    padding: 0 18px;
+}
+
+.dashboard-header {
+    background: white;
+    padding: 22px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.dashboard-header h2 {
+    margin: 0;
+}
+
+.dashboard-header p {
+    margin: 6px 0 0;
+    color: #6b7280;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.stat-card {
+    background: white;
+    padding: 18px;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border-left: 4px solid #2563eb;
+}
+
+.stat-card span {
+    display: block;
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.stat-card strong {
+    font-size: 28px;
+}
+
+.stat-card.success {
+    border-left-color: #16a34a;
+}
+
+.stat-card.danger {
+    border-left-color: #dc2626;
+}
+
+.stat-card.warning {
+    border-left-color: #f59e0b;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 18px;
+}
+
+.panel {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.panel h3 {
+    margin-top: 0;
+}
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.list-item div span {
+    display: block;
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 4px;
+}
+.quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.quick-actions a {
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.quick-actions a:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+</style>
+
+{% endblock %}

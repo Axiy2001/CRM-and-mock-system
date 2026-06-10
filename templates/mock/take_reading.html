@@ -1,0 +1,458 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<form method="post" class="ielts-reading-page" id="readingExamForm">
+    {% csrf_token %}
+
+    <div class="exam-topbar">
+        <div>
+            <strong>{{ mock.title }}</strong>
+            <span>Reading Exam</span>
+        </div>
+
+        <div class="timer" id="timer">
+            {{ mock.duration_minutes }}:00
+        </div>
+
+        <button type="submit" class="finish-btn">
+            Finish Test
+        </button>
+    </div>
+
+    <div class="part-tabs">
+        {% for part_data in parts_data %}
+            <button
+                type="button"
+                class="part-tab {% if forloop.first %}active{% endif %}"
+                data-part="{{ part_data.part.order }}"
+            >
+                Part {{ part_data.part.order }}
+            </button>
+        {% endfor %}
+    </div>
+
+    {% for part_data in parts_data %}
+        <section
+            class="exam-part {% if forloop.first %}active{% endif %}"
+            id="part-{{ part_data.part.order }}"
+        >
+            <div class="exam-layout">
+
+                <div class="passage-panel">
+                    <h3>{{ part_data.part.title }}</h3>
+                    <p class="instruction">{{ part_data.part.instruction }}</p>
+
+                    <div class="passage-text">
+                        {{ part_data.content.content|linebreaks }}
+                    </div>
+                </div>
+
+                <div class="questions-panel">
+                    <h3>Questions {{ part_data.start }}–{{ part_data.end }}</h3>
+
+                    {% for group in part_data.groups %}
+                        <div class="question-group">
+                            <h4>{{ group.title }}</h4>
+
+                            {% if group.instruction %}
+                                <p class="group-instruction">
+                                    {{ group.instruction }}
+                                </p>
+                            {% endif %}
+
+                            {% if group.option_title %}
+                                <div class="options-list">
+                                    <strong>{{ group.option_title }}</strong>
+
+                                    {% for option in group.options.all %}
+                                        <div>
+                                            <b>{{ option.label }}</b>
+                                            {{ option.text }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            {% for question in group.questions.all %}
+                                <div class="question-item" id="question-{{ question.order }}">
+                                    <div class="question-text">
+                                        <strong>{{ question.order }}.</strong>
+                                        {{ question.question_text }}
+                                    </div>
+
+                                    {% if group.question_type == 'tfng' %}
+                                        <div class="answer-options">
+                                            <label>
+                                                <input type="radio" name="answer_{{ question.order }}" value="TRUE">
+                                                TRUE
+                                            </label>
+
+                                            <label>
+                                                <input type="radio" name="answer_{{ question.order }}" value="FALSE">
+                                                FALSE
+                                            </label>
+
+                                            <label>
+                                                <input type="radio" name="answer_{{ question.order }}" value="NOT GIVEN">
+                                                NOT GIVEN
+                                            </label>
+                                        </div>
+
+                                    {% elif group.question_type == 'ynng' %}
+                                        <div class="answer-options">
+                                            <label>
+                                                <input type="radio" name="answer_{{ question.order }}" value="YES">
+                                                YES
+                                            </label>
+
+                                            <label>
+                                                <input type="radio" name="answer_{{ question.order }}" value="NO">
+                                                NO
+                                            </label>
+
+                                            <label>
+                                                <input type="radio" name="answer_{{ question.order }}" value="NOT GIVEN">
+                                                NOT GIVEN
+                                            </label>
+                                        </div>
+
+                                    {% elif group.question_type == 'mcq_single' %}
+                                        <div class="mcq-options">
+                                            {% for choice in question.choices.all %}
+                                                <label>
+                                                    <input type="radio" name="answer_{{ question.order }}" value="{{ choice.label }}">
+                                                    <span>{{ choice.label }}.</span>
+                                                    {{ choice.text }}
+                                                </label>
+                                            {% endfor %}
+                                        </div>
+
+                                    {% elif group.question_type == 'mcq_multi' %}
+                                        <div class="mcq-options">
+                                            {% for choice in question.choices.all %}
+                                                <label>
+                                                    <input type="checkbox" name="answer_{{ question.order }}" value="{{ choice.label }}">
+                                                    <span>{{ choice.label }}.</span>
+                                                    {{ choice.text }}
+                                                </label>
+                                            {% endfor %}
+                                        </div>
+
+                                    {% elif group.question_type == 'paragraph_matching' or group.question_type == 'matching_headings' or group.question_type == 'matching_people' or group.question_type == 'matching_information' or group.question_type == 'matching_endings' %}
+                                        <select name="answer_{{ question.order }}" class="answer-select">
+                                            <option value="">Choose</option>
+
+                                            {% for option in group.options.all %}
+                                                <option value="{{ option.label }}">
+                                                    {{ option.label }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+
+                                    {% else %}
+                                        <input
+                                            type="text"
+                                            name="answer_{{ question.order }}"
+                                            class="answer-input"
+                                            placeholder="Your answer"
+                                        >
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </section>
+    {% endfor %}
+
+    <div class="question-palette">
+        {% for part_data in parts_data %}
+            {% for group in part_data.groups %}
+                {% for question in group.questions.all %}
+                    <button
+                        type="button"
+                        class="palette-btn"
+                        data-question="{{ question.order }}"
+                    >
+                        {{ question.order }}
+                    </button>
+                {% endfor %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+</form>
+
+<style>
+.ielts-reading-page {
+    height: calc(100vh - 58px);
+    display: flex;
+    flex-direction: column;
+    background: #f8fafc;
+}
+
+.exam-topbar {
+    height: 58px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+}
+
+.exam-topbar span {
+    color: #6b7280;
+    margin-left: 8px;
+}
+
+.timer {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.finish-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.part-tabs {
+    background: white;
+    padding: 10px 18px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.part-tab {
+    border: 1px solid #d1d5db;
+    background: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.part-tab.active {
+    border-color: #2563eb;
+    color: #2563eb;
+    font-weight: 700;
+}
+
+.exam-part {
+    display: none;
+    flex: 1;
+    min-height: 0;
+}
+
+.exam-part.active {
+    display: block;
+}
+
+.exam-layout {
+    height: calc(100vh - 170px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.passage-panel,
+.questions-panel {
+    overflow-y: auto;
+    padding: 22px;
+    background: white;
+}
+
+.passage-panel {
+    border-right: 6px solid #e5e7eb;
+}
+
+.instruction,
+.group-instruction {
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.passage-text {
+    line-height: 1.85;
+    font-size: 16px;
+}
+
+.question-group {
+    margin-bottom: 28px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.options-list {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    margin: 12px 0;
+    line-height: 1.8;
+}
+
+.question-item {
+    margin-bottom: 22px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+
+.question-text {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.answer-options,
+.mcq-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.answer-options label,
+.mcq-options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 9px 12px;
+    cursor: pointer;
+}
+
+.answer-options input,
+.mcq-options input {
+    width: auto;
+}
+
+.mcq-options span {
+    font-weight: 700;
+}
+
+.answer-input,
+.answer-select {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.question-palette {
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 10px 18px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.palette-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.palette-btn.answered {
+    background: #dcfce7;
+    border-color: #22c55e;
+    color: #166534;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const partTabs = document.querySelectorAll('.part-tab');
+    const parts = document.querySelectorAll('.exam-part');
+
+    partTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            const partNumber = tab.dataset.part;
+
+            partTabs.forEach(item => item.classList.remove('active'));
+            parts.forEach(item => item.classList.remove('active'));
+
+            tab.classList.add('active');
+            document.getElementById('part-' + partNumber).classList.add('active');
+        });
+    });
+
+    document.querySelectorAll('.palette-btn').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const questionId = button.dataset.question;
+            const target = document.getElementById('question-' + questionId);
+
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        });
+    });
+
+    function updatePalette() {
+        document.querySelectorAll('.palette-btn').forEach(function (button) {
+            const number = button.dataset.question;
+            const fields = document.querySelectorAll(`[name="answer_${number}"]`);
+
+            let answered = false;
+
+            fields.forEach(function (field) {
+                if ((field.type === 'radio' || field.type === 'checkbox') && field.checked) {
+                    answered = true;
+                }
+
+                if ((field.tagName === 'INPUT' || field.tagName === 'SELECT') && field.value.trim() !== '') {
+                    answered = true;
+                }
+            });
+
+            button.classList.toggle('answered', answered);
+        });
+    }
+
+    document.addEventListener('input', updatePalette);
+    document.addEventListener('change', updatePalette);
+
+    let remainingSeconds = Number('{{ mock.duration_minutes }}') * 60;
+    const timer = document.getElementById('timer');
+    const form = document.getElementById('readingExamForm');
+
+    function renderTimer() {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+
+        timer.textContent =
+            String(minutes).padStart(2, '0') + ':' +
+            String(seconds).padStart(2, '0');
+    }
+
+    renderTimer();
+
+    const timerInterval = setInterval(function () {
+        remainingSeconds -= 1;
+        renderTimer();
+
+        if (remainingSeconds <= 0) {
+            clearInterval(timerInterval);
+            form.submit();
+        }
+    }, 1000);
+});
+</script>
+
+{% endblock %}

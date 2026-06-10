@@ -1,0 +1,896 @@
+]{% extends 'base.html' %}
+
+{% block content %}
+
+<form method="post" class="reading-builder" id="readingBuilderForm">
+    {% csrf_token %}
+
+    <div class="topbar">
+        <div>
+            <strong>{{ mock.title }}</strong>
+            <span>Reading Builder V3</span>
+        </div>
+        <a href="{% url 'mock_list' %}">Back</a>
+    </div>
+
+    <div class="part-tabs">
+        {% for item in parts_data %}
+            <button type="button" class="part-tab {% if forloop.first %}active{% endif %}" data-part="{{ item.part.order }}">
+                Part {{ item.part.order }}
+            </button>
+        {% endfor %}
+    </div>
+
+    {% for item in parts_data %}
+        <section class="part-section {% if forloop.first %}active{% endif %}" id="part-{{ item.part.order }}">
+            <div class="builder-grid">
+
+                <div class="passage-panel">
+                    <h3>Part {{ item.part.order }} Passage</h3>
+								<div class="part-range-box">
+    <label>Part question range</label>
+
+    <div class="part-range-row">
+        <input
+            type="number"
+            name="part_start_{{ item.part.order }}"
+            value="{{ item.part.start_number }}"
+            class="part-range-input"
+        >
+
+        <span>to</span>
+
+        <input
+            type="number"
+            name="part_end_{{ item.part.order }}"
+            value="{{ item.part.end_number }}"
+            class="part-range-input"
+        >
+    </div>
+</div>
+
+                    <textarea
+                        name="content_text_{{ item.part.order }}"
+                        class="passage-textarea"
+                        data-preview="preview-{{ item.part.order }}"
+                        placeholder="Passage matnini kiriting..."
+                    >{{ item.content.content }}</textarea>
+
+                    <h4>Paragraph Preview</h4>
+                    <div class="paragraph-preview" id="preview-{{ item.part.order }}"></div>
+                </div>
+
+                <div class="blocks-panel">
+                    <div class="panel-head">
+                        <h3>
+    Part {{ item.part.order }} Blocks
+    <small>({{ item.start }}–{{ item.end }})</small>
+</h3>
+
+                        <button
+                            type="button"
+                            class="add-block-btn"
+                            data-part="{{ item.part.order }}"
+                            data-start="{{ item.start }}"
+                            data-end="{{ item.end }}"
+                        >
+                            + Add Block
+                        </button>
+                    </div>
+
+                    <div id="blocks-{{ item.part.order }}" class="blocks-wrapper">
+                        {% for group in item.groups %}
+                            <div class="question-block" data-block-index="{{ forloop.counter }}">
+                                <input type="hidden" name="group_index_{{ item.part.order }}" value="{{ forloop.counter }}">
+
+                                <div class="block-head">
+                                    <input
+                                        type="text"
+                                        name="group_title_{{ item.part.order }}_{{ forloop.counter }}"
+                                        value="{{ group.title }}"
+                                        placeholder="Questions {{ group.start_number }}-{{ group.end_number }}"
+                                    >
+
+                                    <select name="group_type_{{ item.part.order }}_{{ forloop.counter }}" class="block-type">
+                                        <option value="paragraph_matching" {% if group.question_type == 'paragraph_matching' %}selected{% endif %}>Paragraph Matching</option>
+                                        <option value="tfng" {% if group.question_type == 'tfng' %}selected{% endif %}>TRUE / FALSE / NOT GIVEN</option>
+                                        <option value="ynng" {% if group.question_type == 'ynng' %}selected{% endif %}>YES / NO / NOT GIVEN</option>
+                                        <option value="matching_headings" {% if group.question_type == 'matching_headings' %}selected{% endif %}>Matching Headings</option>
+                                        <option value="matching_people" {% if group.question_type == 'matching_people' %}selected{% endif %}>Matching People / Features</option>
+                                        <option value="matching_information" {% if group.question_type == 'matching_information' %}selected{% endif %}>Matching Information</option>
+                                        <option value="matching_endings" {% if group.question_type == 'matching_endings' %}selected{% endif %}>Matching Endings</option>
+                                        <option value="mcq_single" {% if group.question_type == 'mcq_single' %}selected{% endif %}>MCQ Single</option>
+                                        <option value="mcq_multi" {% if group.question_type == 'mcq_multi' %}selected{% endif %}>MCQ Multi</option>
+                                        <option value="summary_completion" {% if group.question_type == 'summary_completion' %}selected{% endif %}>Summary Completion</option>
+                                        <option value="sentence_completion" {% if group.question_type == 'sentence_completion' %}selected{% endif %}>Sentence Completion</option>
+                                        <option value="short_answer" {% if group.question_type == 'short_answer' %}selected{% endif %}>Short Answer</option>
+                                    </select>
+                                </div>
+
+                                <div class="range-row">
+                                    <input type="number" name="group_start_{{ item.part.order }}_{{ forloop.counter }}" value="{{ group.start_number }}" class="start-number">
+                                    <span>to</span>
+                                    <input type="number" name="group_end_{{ item.part.order }}_{{ forloop.counter }}" value="{{ group.end_number }}" class="end-number">
+                                    <button type="button" class="generate-btn">Generate</button>
+                                </div>
+
+                                <textarea
+                                    name="group_instruction_{{ item.part.order }}_{{ forloop.counter }}"
+                                    rows="2"
+                                    placeholder="Instruction..."
+                                >{{ group.instruction }}</textarea>
+
+                                <input
+                                    type="text"
+                                    name="group_option_title_{{ item.part.order }}_{{ forloop.counter }}"
+                                    value="{{ group.option_title }}"
+                                    class="option-title-input"
+                                    placeholder="List of Headings / List of People / Paragraphs A-I"
+                                >
+
+                                <input
+                                    type="number"
+                                    name="group_word_limit_{{ item.part.order }}_{{ forloop.counter }}"
+                                    value="{{ group.word_limit }}"
+                                    class="word-limit-input"
+                                    placeholder="Word limit"
+                                >
+
+                                <div class="options-box">
+                                    <div class="mini-head">
+                                        <strong>Options</strong>
+                                        <button type="button" class="add-option-btn">+ Option</button>
+                                    </div>
+
+                                    {% for option in group.options.all %}
+                                        <div class="option-row">
+                                            <input type="hidden" name="option_index_{{ item.part.order }}_{{ forloop.parentloop.counter }}" value="{{ forloop.counter }}">
+                                            <input type="text" name="option_label_{{ item.part.order }}_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" value="{{ option.label }}" placeholder="A / i">
+                                            <input type="text" name="option_text_{{ item.part.order }}_{{ forloop.parentloop.counter }}_{{ forloop.counter }}" value="{{ option.text }}" placeholder="Option text">
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="questions-box">
+                                    {% for question in group.questions.all %}
+                                        <div class="question-row">
+                                            <div class="q-num">{{ question.order }}</div>
+
+                                            <textarea
+                                                name="question_text_{{ item.part.order }}_{{ forloop.parentloop.counter }}_{{ question.order }}"
+                                                rows="2"
+                                                placeholder="Question text..."
+                                            >{{ question.question_text }}</textarea>
+
+                                            <input
+                                                type="text"
+                                                name="correct_answer_{{ item.part.order }}_{{ forloop.parentloop.counter }}_{{ question.order }}"
+                                                value="{{ question.correct_answer }}"
+                                                placeholder="Correct answer"
+                                            >
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                <button type="button" class="delete-block-btn">Delete Block</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    {% endfor %}
+
+    <div class="bottom-bar">
+        <button type="submit" class="save-btn">Save Reading Builder</button>
+    </div>
+</form>
+
+<style>
+.reading-builder {
+    height: calc(100vh - 58px);
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+}
+
+.topbar,
+.bottom-bar {
+    background: white;
+    padding: 12px 18px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar span {
+    color: #6b7280;
+    margin-left: 8px;
+}
+
+.part-tabs {
+    background: white;
+    padding: 10px 18px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.part-tab {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 8px;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.part-tab.active {
+    border-color: #2563eb;
+    color: #2563eb;
+    font-weight: 700;
+}
+
+.part-section {
+    display: none;
+    flex: 1;
+    min-height: 0;
+}
+
+.part-section.active {
+    display: block;
+}
+
+.builder-grid {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.passage-panel,
+.blocks-panel {
+    padding: 18px;
+    overflow-y: auto;
+}
+
+.passage-panel {
+    background: white;
+    border-right: 6px solid #e5e7eb;
+}
+
+.passage-textarea {
+    width: 100%;
+    min-height: 380px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 14px;
+    line-height: 1.7;
+    resize: vertical;
+}
+
+.paragraph-preview {
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f9fafb;
+    line-height: 1.7;
+}
+
+.para-label {
+    color: #2563eb;
+    font-weight: 700;
+    margin-right: 8px;
+}
+
+.panel-head,
+.mini-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.add-block-btn,
+.add-option-btn,
+.generate-btn,
+.save-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.question-block {
+    background: white;
+    border-left: 4px solid #2563eb;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.block-head {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 10px;
+}
+
+.range-row {
+    display: grid;
+    grid-template-columns: 100px 30px 100px 100px;
+    gap: 8px;
+    align-items: center;
+}
+
+.question-block input,
+.question-block select,
+.question-block textarea {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 9px 10px;
+    margin-bottom: 8px;
+}
+
+.options-box {
+    background: #f9fafb;
+    border: 1px dashed #d1d5db;
+    padding: 12px;
+    border-radius: 10px;
+    margin: 12px 0;
+}
+
+.option-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 8px;
+}
+
+.question-row {
+    display: grid;
+    grid-template-columns: 42px 1fr 180px;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.q-num {
+    width: 34px;
+    height: 34px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+}
+
+.delete-block-btn {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+.bottom-bar {
+    border-top: 1px solid #e5e7eb;
+    justify-content: flex-end;
+}
+.part-range-box {
+    margin-bottom: 14px;
+    padding: 12px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+.part-range-box label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.part-range-row {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr;
+    gap: 8px;
+    align-items: center;
+}
+
+.part-range-input {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 9px 10px;
+}
+
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.radio-group input[type="radio"] {
+    margin: 0;
+}
+.mcq-card {
+    margin-bottom: 15px;
+}
+
+.mcq-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.mcq-option input[type="text"] {
+    flex: 1;
+}
+
+.question-block input[type="radio"],
+.question-block input[type="checkbox"] {
+    width: auto !important;
+    margin-bottom: 0;
+}
+
+.mcq-question-row {
+    grid-template-columns: 42px 1fr 180px;
+}
+
+.mcq-card {
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.mcq-option {
+    display: grid;
+    grid-template-columns: 24px 28px 1fr;
+    gap: 10px;
+    align-items: center;
+    margin: 8px 0 8px 42px;
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.mcq-option input[type="text"] {
+    margin-bottom: 0;
+}
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = document.querySelectorAll('.part-tab');
+    const parts = document.querySelectorAll('.part-section');
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            const partNumber = tab.dataset.part;
+
+            tabs.forEach(item => item.classList.remove('active'));
+            parts.forEach(item => item.classList.remove('active'));
+
+            tab.classList.add('active');
+            document.getElementById('part-' + partNumber).classList.add('active');
+        });
+    });
+
+    function updatePreview(textarea) {
+        const preview = document.getElementById(textarea.dataset.preview);
+
+        if (!preview) return;
+
+        const paragraphs = textarea.value
+            .split(/\n\s*\n/)
+            .map(p => p.trim())
+            .filter(Boolean);
+
+        preview.innerHTML = paragraphs.map(function (paragraph, index) {
+            const label = String.fromCharCode(65 + index);
+            return `<p><span class="para-label">${label}</span>${paragraph}</p>`;
+        }).join('');
+    }
+
+    document.querySelectorAll('.passage-textarea').forEach(function (textarea) {
+        updatePreview(textarea);
+        textarea.addEventListener('input', function () {
+            updatePreview(textarea);
+        });
+    });
+
+    document.querySelectorAll('.add-block-btn').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const part = button.dataset.part;
+            const wrapper = document.getElementById('blocks-' + part);
+            const section = document.getElementById('part-' + part);
+            const index = wrapper.querySelectorAll('.question-block').length + 1;
+
+            const startInput = section.querySelector(`[name="part_start_${part}"]`);
+            const endInput = section.querySelector(`[name="part_end_${part}"]`);
+
+            const start = startInput && startInput.value ? startInput.value : button.dataset.start;
+            const end = endInput && endInput.value ? endInput.value : button.dataset.end;
+
+            wrapper.insertAdjacentHTML('beforeend', createBlockHtml(part, index, start, end));
+        });
+    });
+
+    document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('delete-block-btn')) {
+            if (confirm('Bu block o‘chirilsinmi?')) {
+                event.target.closest('.question-block').remove();
+            }
+        }
+
+        if (event.target.classList.contains('generate-btn')) {
+            const block = event.target.closest('.question-block');
+            generateQuestions(block);
+        }
+
+        if (event.target.classList.contains('add-option-btn')) {
+            const block = event.target.closest('.question-block');
+            addOption(block);
+        }
+    });
+
+    document.addEventListener('change', function (event) {
+        if (event.target.classList.contains('block-type')) {
+            const block = event.target.closest('.question-block');
+            updateBlockUI(block);
+            generateQuestions(block);
+        }
+
+        if (
+            event.target.classList.contains('mcq-correct-radio') ||
+            event.target.classList.contains('mcq-correct-checkbox')
+        ) {
+            updateMcqCorrectAnswer(event.target.closest('.mcq-card'));
+        }
+    });
+
+    function createBlockHtml(part, index, startValue, endValue) {
+        return `
+            <div class="question-block" data-block-index="${index}">
+                <input type="hidden" name="group_index_${part}" value="${index}">
+
+                <div class="block-head">
+                    <input type="text" name="group_title_${part}_${index}" value="Questions ${startValue || 1}-${endValue || 5}" placeholder="Questions 1-5">
+
+                    <select name="group_type_${part}_${index}" class="block-type">
+                        <option value="paragraph_matching">Paragraph Matching</option>
+                        <option value="tfng">TRUE / FALSE / NOT GIVEN</option>
+                        <option value="ynng">YES / NO / NOT GIVEN</option>
+                        <option value="matching_headings">Matching Headings</option>
+                        <option value="matching_people">Matching People / Features</option>
+                        <option value="matching_information">Matching Information</option>
+                        <option value="matching_endings">Matching Endings</option>
+                        <option value="mcq_single">MCQ Single</option>
+                        <option value="mcq_multi">MCQ Multi</option>
+                        <option value="summary_completion">Summary Completion</option>
+                        <option value="sentence_completion">Sentence Completion</option>
+                        <option value="short_answer">Short Answer</option>
+                    </select>
+                </div>
+
+                <div class="range-row">
+                    <input type="number" name="group_start_${part}_${index}" class="start-number" value="${startValue || 1}">
+                    <span>to</span>
+                    <input type="number" name="group_end_${part}_${index}" class="end-number" value="${endValue || 5}">
+                    <button type="button" class="generate-btn">Generate</button>
+                </div>
+
+                <textarea name="group_instruction_${part}_${index}" rows="2" placeholder="Instruction..."></textarea>
+
+                <input type="text" name="group_option_title_${part}_${index}" class="option-title-input" placeholder="List title">
+                <input type="number" name="group_word_limit_${part}_${index}" class="word-limit-input" placeholder="Word limit">
+
+                <div class="options-box"></div>
+                <div class="questions-box"></div>
+
+                <button type="button" class="delete-block-btn">Delete Block</button>
+            </div>
+        `;
+    }
+
+    function getPartAndIndex(block) {
+        const part = block.closest('.part-section').id.replace('part-', '');
+        const index = block.dataset.blockIndex;
+        return { part, index };
+    }
+
+    function updateBlockUI(block) {
+        const type = block.querySelector('.block-type').value;
+        const optionTitle = block.querySelector('.option-title-input');
+        const wordLimit = block.querySelector('.word-limit-input');
+        const optionsBox = block.querySelector('.options-box');
+
+        const needsOptions = [
+            'paragraph_matching',
+            'matching_headings',
+            'matching_people',
+            'matching_information',
+            'matching_endings',
+            'mcq_single',
+            'mcq_multi'
+        ].includes(type);
+
+        const needsWordLimit = [
+            'summary_completion',
+            'sentence_completion',
+            'short_answer'
+        ].includes(type);
+
+        optionTitle.classList.toggle('hidden', !needsOptions);
+        optionsBox.classList.toggle('hidden', !needsOptions);
+        wordLimit.classList.toggle('hidden', !needsWordLimit);
+
+        if (needsOptions && optionsBox.innerHTML.trim() === '') {
+            optionsBox.innerHTML = `
+                <div class="mini-head">
+                    <strong>Options</strong>
+                    <button type="button" class="add-option-btn">+ Option</button>
+                </div>
+            `;
+
+            addOption(block);
+            addOption(block);
+            addOption(block);
+            addOption(block);
+        }
+    }
+
+    function addOption(block) {
+        const { part, index } = getPartAndIndex(block);
+        const optionsBox = block.querySelector('.options-box');
+        const optionIndex = optionsBox.querySelectorAll('.option-row').length + 1;
+
+        optionsBox.insertAdjacentHTML('beforeend', `
+            <div class="option-row">
+                <input type="hidden" name="option_index_${part}_${index}" value="${optionIndex}">
+                <input type="text" name="option_label_${part}_${index}_${optionIndex}" placeholder="A / i">
+                <input type="text" name="option_text_${part}_${index}_${optionIndex}" placeholder="Option text">
+            </div>
+        `);
+    }
+
+    function generateQuestions(block) {
+        const { part, index } = getPartAndIndex(block);
+        const type = block.querySelector('.block-type').value;
+        const start = Number(block.querySelector('.start-number').value);
+        const end = Number(block.querySelector('.end-number').value);
+        const box = block.querySelector('.questions-box');
+
+        let html = '';
+
+        for (let number = start; number <= end; number++) {
+            html += createQuestionHtml(part, index, number, type);
+        }
+
+        box.innerHTML = html;
+    }
+
+    function createQuestionHtml(part, index, number, type) {
+        if (type === 'tfng') {
+            return basicQuestion(part, index, number, `
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="correct_answer_${part}_${index}_${number}" value="TRUE">
+                        TRUE
+                    </label>
+                    <label>
+                        <input type="radio" name="correct_answer_${part}_${index}_${number}" value="FALSE">
+                        FALSE
+                    </label>
+                    <label>
+                        <input type="radio" name="correct_answer_${part}_${index}_${number}" value="NOT GIVEN">
+                        NOT GIVEN
+                    </label>
+                </div>
+            `);
+        }
+
+        if (type === 'ynng') {
+            return basicQuestion(part, index, number, `
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="correct_answer_${part}_${index}_${number}" value="YES">
+                        YES
+                    </label>
+                    <label>
+                        <input type="radio" name="correct_answer_${part}_${index}_${number}" value="NO">
+                        NO
+                    </label>
+                    <label>
+                        <input type="radio" name="correct_answer_${part}_${index}_${number}" value="NOT GIVEN">
+                        NOT GIVEN
+                    </label>
+                </div>
+            `);
+        }
+
+        if (type === 'mcq_single') {
+            return createMcqQuestion(part, index, number, ['A', 'B', 'C', 'D'], 'single');
+        }
+
+        if (type === 'mcq_multi') {
+            return createMcqQuestion(part, index, number, ['A', 'B', 'C', 'D', 'E'], 'multi');
+        }
+
+        if (
+            type === 'paragraph_matching' ||
+            type === 'matching_headings' ||
+            type === 'matching_people' ||
+            type === 'matching_information' ||
+            type === 'matching_endings'
+        ) {
+            return basicQuestion(part, index, number, `
+                <input
+                    type="text"
+                    name="correct_answer_${part}_${index}_${number}"
+                    placeholder="Correct option: A / B / i / ii"
+                >
+            `);
+        }
+
+        if (
+            type === 'summary_completion' ||
+            type === 'sentence_completion' ||
+            type === 'short_answer'
+        ) {
+            return basicQuestion(part, index, number, `
+                <input
+                    type="text"
+                    name="correct_answer_${part}_${index}_${number}"
+                    placeholder="Correct word / phrase"
+                >
+            `);
+        }
+
+        return basicQuestion(part, index, number, `
+            <input type="text" name="correct_answer_${part}_${index}_${number}" placeholder="Correct answer">
+        `);
+    }
+
+    function basicQuestion(part, index, number, answerHtml) {
+        return `
+            <div class="question-row">
+                <div class="q-num">${number}</div>
+                <textarea name="question_text_${part}_${index}_${number}" rows="2" placeholder="Question ${number} text..."></textarea>
+                ${answerHtml}
+            </div>
+        `;
+    }
+
+    function createMcqQuestion(part, index, number, labels, mode) {
+        const inputType = mode === 'single' ? 'radio' : 'checkbox';
+        const inputClass = mode === 'single' ? 'mcq-correct-radio' : 'mcq-correct-checkbox';
+        const inputName = mode === 'single'
+            ? `mcq_correct_${part}_${index}_${number}`
+            : `mcq_correct_${part}_${index}_${number}[]`;
+
+        return `
+            <div class="mcq-card" data-part="${part}" data-index="${index}" data-number="${number}">
+                <div class="question-row mcq-question-row">
+                    <div class="q-num">${number}</div>
+
+                    <textarea
+                        name="question_text_${part}_${index}_${number}"
+                        rows="2"
+                        placeholder="Question ${number} text..."
+                    ></textarea>
+
+                    <input
+                        type="hidden"
+                        name="correct_answer_${part}_${index}_${number}"
+                        class="mcq-correct-answer"
+                    >
+                </div>
+
+                ${labels.map(function (label, i) {
+                    const choiceIndex = i + 1;
+
+                    return `
+                        <div class="mcq-option">
+                            <input
+                                type="${inputType}"
+                                class="${inputClass}"
+                                name="${inputName}"
+                                value="${label}"
+                            >
+
+                            <strong>${label}</strong>
+
+                            <input
+                                type="hidden"
+                                name="choice_index_${part}_${index}_${number}"
+                                value="${choiceIndex}"
+                            >
+
+                            <input
+                                type="hidden"
+                                name="choice_label_${part}_${index}_${number}_${choiceIndex}"
+                                value="${label}"
+                            >
+
+                            <input
+                                type="hidden"
+                                name="choice_correct_${part}_${index}_${number}_${choiceIndex}"
+                                class="choice-correct-hidden"
+                                data-label="${label}"
+                                value=""
+                            >
+
+                            <input
+                                type="text"
+                                name="choice_text_${part}_${index}_${number}_${choiceIndex}"
+                                placeholder="Option ${label}"
+                            >
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    function updateMcqCorrectAnswer(card) {
+        if (!card) return;
+
+        const checkedInputs = card.querySelectorAll('.mcq-correct-radio:checked, .mcq-correct-checkbox:checked');
+        const labels = Array.from(checkedInputs).map(input => input.value);
+
+        const answerInput = card.querySelector('.mcq-correct-answer');
+
+        if (answerInput) {
+            answerInput.value = labels.join(',');
+        }
+
+        card.querySelectorAll('.choice-correct-hidden').forEach(function (hidden) {
+            hidden.value = labels.includes(hidden.dataset.label) ? 'on' : '';
+        });
+    }
+
+    document.querySelectorAll('.question-block').forEach(function (block) {
+        updateBlockUI(block);
+    });
+
+    const form = document.getElementById('readingBuilderForm');
+
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            if (!confirm('Reading builder saqlansinmi?')) {
+                event.preventDefault();
+            }
+        });
+    }
+});
+</script>
+
+{% endblock %}
